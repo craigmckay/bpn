@@ -166,7 +166,7 @@ if (empty($person_id)) {
 </form>
 <?
 } else {
-  $sql = "SELECT bin_name FROM bin WHERE bin_no=" . $bin_no;
+  $sql = "SELECT bin_name FROM bin WHERE active=1 AND bin_no=" . $bin_no;
   $result = $conn->query($sql);
   
   if ($result->num_rows > 0) {
@@ -225,6 +225,7 @@ if (empty($person_id)) {
       "  WHERE (SELECT MAX(emptied_date) FROM empty WHERE bin_no=report.bin_no) < reported_date " .
       "  GROUP BY bin_no " .
       ") " .
+      "AND b.active=1 " .
       "ORDER BY r.reported_date ";
     $result = $conn->query($sql);
     if ($result->num_rows > 0) {

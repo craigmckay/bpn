@@ -14,7 +14,16 @@ if ($conn->connect_error) {
 $bin_no = NULL; if(!empty($_GET["bin_no"])) $bin_no = $_GET["bin_no"];
 $bin_name = NULL;
 
-if (empty($bin_no)) {
+if (!empty($bin_no)) {
+  $sql = "SELECT bin_name FROM bin WHERE active=1 AND bin_no=" . $bin_no;
+  $result = $conn->query($sql);
+
+  if ($result->num_rows > 0) {
+    $row = mysqli_fetch_assoc($result);
+    $bin_name = $row["bin_name"];
+  }
+}
+if (empty($bin_no) || empty($bin_name)) {
 ?>
 <html>
 <head>
@@ -29,26 +38,17 @@ h1, p {
 <h1>The QR code you have scanned is incorrect.  Please email <a href="mailto:brechinpathnetwork@googlegroups.com">brechinpathnetwork@googlegroups.com</a>.</h1>
 <?
 } else {
-  $sql = "SELECT bin_name FROM bin WHERE bin_no=" . $bin_no;
-  $result = $conn->query($sql);
-  
-  if ($result->num_rows > 0) {
-    if ($row = $result->fetch_assoc()) {
-      $bin_name = $row["bin_name"];
-    }
-    
-    $sql = "INSERT INTO report (bin_no, remote_addr, http_user_agent) VALUES ('" . $bin_no . "', '" . 
-      $_SERVER['REMOTE_ADDR'] . "', '" . $_SERVER['HTTP_USER_AGENT'] . "');";
+  $sql = "INSERT INTO report (bin_no, remote_addr, http_user_agent) VALUES ('" . $bin_no . "', '" . 
+    $_SERVER['REMOTE_ADDR'] . "', '" . $_SERVER['HTTP_USER_AGENT'] . "');";
 
-    $conn->query($sql);
-    $conn->close();
+  $conn->query($sql);
+  $conn->close();
 
-    $to_email = "brechinpathnetwork@googlegroups.com";
-    $subject = "Empty Waste Bin (" . $bin_no . ") - " . $bin_name;
-    $message = $subject . "\r\n\r\nNeed the map? https://southesk.com/bpn \r\n\r\n";
-    $headers = ""; //"From: craigamckay@gmail.com";
-    mail($to_email,$subject,$message,$headers);
-  }
+  $to_email = "brechinpathnetwork@googlegroups.com";
+  $subject = "Empty Waste Bin (" . $bin_no . ") - " . $bin_name;
+  $message = $subject . "\r\n\r\nNeed the map? https://southesk.com/bpn \r\n\r\n";
+  $headers = ""; //"From: craigamckay@gmail.com";
+  mail($to_email,$subject,$message,$headers);
 ?>
 <html>
 <head>
