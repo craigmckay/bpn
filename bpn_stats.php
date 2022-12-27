@@ -126,26 +126,28 @@ const chartColors = {
 var ctx = document.getElementById('chrtPerson');
 
 <?php
-$sql = "SELECT t.contents, t.initials, SUM(t.empty_count) empty_count, MIN(t.total_count) total_count ".
-" FROM ( ".
-"   SELECT  ".
-"         IFNULL(e.contents, 'Full') contents,  ".
-"         p.initials,  ".
-"         COUNT(*) empty_count, ".
-"         (SELECT COUNT(*) FROM empty e2 INNER JOIN bin b2 ON b2.bin_no=e2.bin_no WHERE e2.person_id=e.person_id AND b2.active=1) total_count ".
-"        FROM person p   ".
-"        LEFT JOIN empty e ON p.person_id=e.person_id   ".
-"        GROUP BY   ".
-"         e.contents,  ".
-"         p.initials ".
-"   UNION ".
-"   SELECT c.contents, p.initials, 0 empty_count, ".
-"    (SELECT COUNT(*) FROM empty e2 INNER JOIN bin b2 ON b2.bin_no=e2.bin_no WHERE e2.person_id=p.person_id AND b2.active=1) total_count ".
-"     FROM contents c, person p ".
-"  ) t     ".
-"  GROUP BY t.contents, t.initials" .
-"  HAVING SUM(t.total_count)>0 " .
-"  ORDER BY t.contents, t.total_count DESC, t.initials";
+$sql = 
+  "SELECT t.contents, t.initials, SUM(t.empty_count) empty_count, MIN(t.total_count) total_count ".
+  "FROM ( ".
+  "   SELECT  ".
+  "         IFNULL(e.contents, 'Full') contents,  ".
+  "         p.initials,  ".
+  "         COUNT(*) empty_count, ".
+  "         (SELECT COUNT(*) FROM empty e2 INNER JOIN bin b2 ON b2.bin_no=e2.bin_no WHERE e2.person_id=e.person_id) total_count ".
+  "        FROM person p ".
+  "        INNER JOIN empty e ON p.person_id=e.person_id   ".
+  "        INNER JOIN bin b ON b.bin_no=e.bin_no ".
+  "        GROUP BY   ".
+  "         e.contents,  ".
+  "         p.initials ".
+  "   UNION ".
+  "   SELECT c.contents, p.initials, 0 empty_count, ".
+  "    (SELECT COUNT(*) FROM empty e2 INNER JOIN bin b2 ON b2.bin_no=e2.bin_no WHERE e2.person_id=p.person_id) total_count ".
+  "     FROM contents c, person p ".
+  "  ) t     ".
+  "  GROUP BY t.contents, t.initials" .
+  "  HAVING SUM(t.total_count)>0 " .
+  "  ORDER BY t.contents, t.total_count DESC, t.initials";
 $result = $conn->query($sql);
 if ($result->num_rows > 0) {
     $prev_list = "";
@@ -165,9 +167,9 @@ echo "];\r\n";
 var people = [
 <?php
 $sql = "   SELECT p.initials, ".
-"    (SELECT COUNT(*) FROM empty e2 INNER JOIN bin b2 ON b2.bin_no=e2.bin_no WHERE e2.person_id=p.person_id AND b2.active=1) total_count ".
+"    (SELECT COUNT(*) FROM empty e2 INNER JOIN bin b2 ON b2.bin_no=e2.bin_no WHERE e2.person_id=p.person_id) total_count ".
 "  FROM person p ".
-"  WHERE (SELECT COUNT(*) FROM empty e2 INNER JOIN bin b2 ON b2.bin_no=e2.bin_no WHERE e2.person_id=p.person_id AND b2.active=1) > 0 ".
+"  WHERE (SELECT COUNT(*) FROM empty e2 INNER JOIN bin b2 ON b2.bin_no=e2.bin_no WHERE e2.person_id=p.person_id) > 0 ".
 "  ORDER BY 2 DESC, 1";
 $result = $conn->query($sql);
 if ($result->num_rows > 0) {
@@ -212,7 +214,7 @@ var chrtPerson = new Chart(ctx, {
     plugins: {
         title: {
           display: true,
-          text: "Most empties by person and status"
+          text: "Most empties by person and status (including bins now inactive)"
         },
         legend: {
             display: true
@@ -290,7 +292,7 @@ if ($result->num_rows > 0) {
 ?>
 ];
 
-var chrtPerson = new Chart(ctx, {
+var chrtBin = new Chart(ctx, {
  type: 'bar',
  data: {
     labels: bins,
@@ -321,7 +323,7 @@ var chrtPerson = new Chart(ctx, {
     plugins: {
         title: {
           display: true,
-          text: "Empties by bin and status"
+          text: "Empties by bin and status (only currently active)"
         },
     },
     responsive: true,
@@ -332,7 +334,6 @@ var chrtPerson = new Chart(ctx, {
           minRotation: 90,
           maxRotation: 90,
           autoSkip: false,
-          // Include a dollar sign in the ticks
           callback: function(value, index, values) {
             return this.getLabelForValue(value).split(" - ")[0];
           }
