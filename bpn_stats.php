@@ -16,6 +16,15 @@ $bin_no = NULL; if(!empty($_POST["bin_no"])) $bin_no = $_POST["bin_no"];
 ?>
 <html>
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MPXXSQYB9E"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-MPXXSQYB9E');
+</script>
 <title>Waste Bin Stats</title>
 <style>
 

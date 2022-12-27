@@ -27,6 +27,15 @@ if (empty($bin_no) || empty($bin_name)) {
 ?>
 <html>
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MPXXSQYB9E"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-MPXXSQYB9E');
+</script>
 <title>Brechin Path Network - Empty Waste Bin</title>
 <style>
 h1, p {

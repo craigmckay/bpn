@@ -28,6 +28,15 @@ if ($result->num_rows > 0) {
 ?>
 <html>
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MPXXSQYB9E"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-MPXXSQYB9E');
+</script>
 <title>Waste Bin Emptied<? if (!empty($person_name)) { echo " by " . $person_name; }?></title>
 <style>
 h1, h2, p, label, dt, td, th {

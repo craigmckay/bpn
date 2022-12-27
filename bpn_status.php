@@ -13,6 +13,15 @@ if ($conn->connect_error) {
 ?>
 <html>
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MPXXSQYB9E"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-MPXXSQYB9E');
+</script>
 <title>Waste Bin Status</title>
 <style>
 h1, h2, p, label, dt, td, th {
