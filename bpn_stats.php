@@ -12,7 +12,8 @@ if ($conn->connect_error) {
 }
 
 $person = NULL; if(!empty($_GET["person"])) $person = $_GET["person"];
-$bin_no = NULL; if(!empty($_POST["bin_no"])) $bin_no = $_POST["bin_no"];
+$period = 0; if(!empty($_GET["period"])) $period = $_GET["period"];
+$bin_no = NULL; if(!empty($_GET["bin_no"])) $bin_no = $_GET["bin_no"];
 ?>
 <html>
 <head>
@@ -97,7 +98,7 @@ dt {
 }
 
 #div {
-  height: 47vh;
+  height: 44vh;
   margin: auto;
 }
 
@@ -105,9 +106,42 @@ dt {
   width: 80vw;  
 }
 
+#buttons {
+  margin: auto;
+  padding-top: 1vh;
+}
+
+.button {
+  background-color: #046DFF;
+  border: none;
+  color: white;
+  padding: 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 12px;
+  margin: 5px 10px 10px 10px;
+  border-radius: 20px;
+}
+.button:hover {
+  background-color: #046DAA;
+}
+
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  function refreshPeriod(period) {
+    const urlPieces = [location.protocol, '//', location.host, location.pathname]
+    let url = urlPieces.join('')
+    top.location.href=url + "?period=" + period;
+  }
+  function refreshPerson(person) {
+    const urlPieces = [location.protocol, '//', location.host, location.pathname]
+    let url = urlPieces.join('')
+    top.location.href=url + "?person=" + person <?php echo (($period==0) ? "" : "+ \"&period=".$period . "\"")?>;
+  }
+</script>
 </head>
 
 <body>
@@ -116,7 +150,14 @@ dt {
   <canvas id="chrtPerson"></canvas>
 </div>
 
-<p></p>
+<div id="buttons">
+<input type=button class="button" id="period_all" name="period_all" value="All time" onClick="refreshPeriod(0);">
+<input type=button class="button" id="period_1y" name="period_1y" value="1 year" onClick="refreshPeriod(12);">
+<input type=button class="button" id="period_3m" name="period_3m" value="3 months" onClick="refreshPeriod(3);">
+<input type=button class="button" id="period_1m" name="period_1m" value="1 month" onClick="refreshPeriod(1);">
+</div>
+
+<div id=debug></div>
 
 <div id="div">
   <canvas id="chrtBin"></canvas>
@@ -138,25 +179,29 @@ var ctx = document.getElementById('chrtPerson');
 $sql = 
   "SELECT t.contents, t.initials, SUM(t.empty_count) empty_count, MIN(t.total_count) total_count ".
   "FROM ( ".
-  "   SELECT  ".
-  "         IFNULL(e.contents, 'Full') contents,  ".
-  "         p.initials,  ".
-  "         COUNT(*) empty_count, ".
-  "         (SELECT COUNT(*) FROM empty e2 INNER JOIN bin b2 ON b2.bin_no=e2.bin_no WHERE e2.person_id=e.person_id) total_count ".
-  "        FROM person p ".
-  "        INNER JOIN empty e ON p.person_id=e.person_id   ".
-  "        INNER JOIN bin b ON b.bin_no=e.bin_no ".
-  "        GROUP BY   ".
-  "         e.contents,  ".
-  "         p.initials ".
-  "   UNION ".
-  "   SELECT c.contents, p.initials, 0 empty_count, ".
-  "    (SELECT COUNT(*) FROM empty e2 INNER JOIN bin b2 ON b2.bin_no=e2.bin_no WHERE e2.person_id=p.person_id) total_count ".
-  "     FROM contents c, person p ".
-  "  ) t     ".
-  "  GROUP BY t.contents, t.initials" .
-  "  HAVING SUM(t.total_count)>0 " .
-  "  ORDER BY t.contents, t.total_count DESC, t.initials";
+    "SELECT ".
+      "IFNULL(e.contents, 'Full') contents, ".
+      "p.initials, ".
+      "COUNT(*) empty_count, ".
+      "(SELECT COUNT(*) FROM empty e2 INNER JOIN bin b2 ON b2.bin_no=e2.bin_no WHERE e2.person_id=e.person_id " .
+        (($period==0) ? "" : " AND e2.emptied_date >= (NOW() - INTERVAL " . $period . " MONTH)"). ") total_count ".
+      "FROM person p ".
+      "INNER JOIN empty e ON p.person_id=e.person_id ".
+      "INNER JOIN bin b ON b.bin_no=e.bin_no ".
+      (($period==0) ? "" : "WHERE e.emptied_date >= (NOW() - INTERVAL " . $period . " MONTH) ") .
+      "GROUP BY ".
+        "e.contents, ".
+        "p.initials ".
+    "UNION ".
+    "SELECT c.contents, p.initials, 0 empty_count, ".
+    "(SELECT COUNT(*) FROM empty e2 INNER JOIN bin b2 ON b2.bin_no=e2.bin_no WHERE e2.person_id=p.person_id " .
+        (($period==0) ? "" : " AND e2.emptied_date >= (NOW() - INTERVAL " . $period . " MONTH)"). ") total_count ".
+    "FROM contents c, person p ".
+    ") t ".
+    "GROUP BY t.contents, t.initials " .
+    "HAVING SUM(t.total_count)>0 " .
+    "ORDER BY t.contents, t.total_count DESC, t.initials ";
+
 $result = $conn->query($sql);
 if ($result->num_rows > 0) {
     $prev_list = "";
@@ -170,16 +215,22 @@ if ($result->num_rows > 0) {
       $prev_list = $row["contents"];
     }
 }
-echo "];\r\n";
 ?>
+];
+
+//const debug = document.getElementById('debug');
+//debug.innerText = "<?=$sql?>";
 
 var people = [
 <?php
-$sql = "   SELECT p.initials, ".
-"    (SELECT COUNT(*) FROM empty e2 INNER JOIN bin b2 ON b2.bin_no=e2.bin_no WHERE e2.person_id=p.person_id) total_count ".
-"  FROM person p ".
-"  WHERE (SELECT COUNT(*) FROM empty e2 INNER JOIN bin b2 ON b2.bin_no=e2.bin_no WHERE e2.person_id=p.person_id) > 0 ".
-"  ORDER BY 2 DESC, 1";
+$sql = 
+  "SELECT p.initials, ".
+    "(SELECT COUNT(*) FROM empty e2 INNER JOIN bin b2 ON b2.bin_no=e2.bin_no WHERE e2.person_id=p.person_id " .
+        (($period==0) ? "" : " AND e2.emptied_date >= (NOW() - INTERVAL " . $period . " MONTH)"). ") total_count ".
+  "FROM person p ".
+  "WHERE (SELECT COUNT(*) FROM empty e2 INNER JOIN bin b2 ON b2.bin_no=e2.bin_no WHERE e2.person_id=p.person_id " .
+        (($period==0) ? "" : " AND e2.emptied_date >= (NOW() - INTERVAL " . $period . " MONTH)"). ") > 0 ".
+  "ORDER BY 2 DESC, 1";
 $result = $conn->query($sql);
 if ($result->num_rows > 0) {
     $prev_list = "";
@@ -191,6 +242,7 @@ if ($result->num_rows > 0) {
 }
 ?>
 ];
+
 
 var chrtPerson = new Chart(ctx, {
  type: 'bar',
@@ -221,51 +273,76 @@ var chrtPerson = new Chart(ctx, {
  },
  options: {
     plugins: {
-        title: {
-          display: true,
-          text: "Most empties by person and status (including bins now inactive)"
-        },
-        legend: {
-            display: true
-        },
+      title: {
+        display: true,
+        text: "Most empties by person and status (including bins now inactive)"
+      },
+      legend: {
+        display: true
+      },
     },
     responsive: true,
-        scales: {
-          x: {
-            stacked: true,
-          },
-          y: {
-            stacked: true
-          }
-        }        
+    scales: {
+      x: {
+        stacked: true,
+        grid: {
+          display: false
+        }
+      },
+      y: {
+        stacked: true,
+        ticks: {
+          precision: 0
+        }
+      }
+    }        
  }
 })
+
+ctx.onclick = function(evt) {
+  const points = chrtPerson.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+
+  if (points.length) {
+    const firstPoint = points[0];
+    const label = chrtPerson.data.labels[firstPoint.index];
+    refreshPerson(label);
+  }
+};
 
 var ctx = document.getElementById('chrtBin');
 
 <?php
-$sql = "SELECT t.contents, t.bin_no, SUM(t.empty_count) empty_count, MIN(t.total_count) total_count ".
-" FROM ( ".
-"   SELECT  ".
-"         IFNULL(e.contents, 'Full') contents, ".
-"         e.bin_no, ".
-"         COUNT(*) empty_count, ".
-"         (SELECT COUNT(*) FROM empty e2 WHERE e2.bin_no=e.bin_no) total_count ".
-"        FROM bin b ".
-"        LEFT JOIN empty e ON e.bin_no=b.bin_no ".
-"        WHERE b.active=1 " .
-"        GROUP BY   ".
-"         e.contents,  ".
-"         e.bin_no ".
-"   UNION ".
-"   SELECT c.contents, b.bin_no, 0 empty_count, ".
-"    (SELECT COUNT(*) FROM empty e2 WHERE e2.bin_no=b.bin_no) total_count ".
-"     FROM contents c, bin b " .
-"     WHERE b.active=1 " .
-"  ) t     ".
-"  GROUP BY t.contents, t.bin_no" .
-"  HAVING SUM(t.total_count)>0 " .
-"  ORDER BY t.contents, t.total_count DESC, t.bin_no";
+$sql = 
+  "SELECT t.contents, t.bin_no, SUM(t.empty_count) empty_count, MIN(t.total_count) total_count ".
+    "FROM ( ".
+      "SELECT ".
+        "IFNULL(e.contents, 'Full') contents, ".
+        "e.bin_no, ".
+        "COUNT(*) empty_count, ".
+        "(SELECT COUNT(*) FROM empty e2 ".
+       (empty($person) ? "" : "INNER JOIN person p ON p.person_id=e2.person_id AND p.initials='" . $person . "' ").     
+        "WHERE e2.bin_no=e.bin_no " .
+        (($period==0) ? "" : " AND e2.emptied_date >= (NOW() - INTERVAL " . $period . " MONTH)"). ") total_count ".
+      "FROM bin b ".
+      "INNER JOIN empty e ON e.bin_no=b.bin_no ".
+      (empty($person) ? "" : "INNER JOIN person p ON p.person_id=e.person_id AND p.initials='" . $person . "' ").     
+      "WHERE b.active=1 " .
+      (($period==0) ? "" : "AND e.emptied_date >= (NOW() - INTERVAL " . $period . " MONTH) ") .
+      "GROUP BY ".
+      "e.contents, ".
+      "e.bin_no ".
+      "UNION ".
+      "SELECT c.contents, b.bin_no, 0 empty_count, ".
+      "(SELECT COUNT(*) FROM empty e2 ".
+      (empty($person) ? "" : "INNER JOIN person p ON p.person_id=e2.person_id AND p.initials='" . $person . "' ").     
+      "WHERE e2.bin_no=b.bin_no " .
+        (($period==0) ? "" : " AND e2.emptied_date >= (NOW() - INTERVAL " . $period . " MONTH)"). ") total_count ".
+      "FROM contents c, bin b " .
+      "WHERE b.active=1 " .
+    ") t ".
+    "GROUP BY t.contents, t.bin_no " .
+    "HAVING SUM(t.total_count)>0 " .
+    "ORDER BY t.contents, t.total_count DESC, t.bin_no";
 $result = $conn->query($sql);
 if ($result->num_rows > 0) {
     $prev_list = "";
@@ -284,11 +361,15 @@ echo "];\r\n";
 
 var bins = [
 <?php
-$sql = "   SELECT b.bin_no, b.bin_name, 0 empty_count, ".
-"    (SELECT COUNT(*) FROM empty e2 WHERE e2.bin_no=b.bin_no) total_count ".
-"     FROM bin b " .
-"     WHERE b.active=1 " .
-"  ORDER BY 4 DESC, 1";
+$sql = 
+  "SELECT b.bin_no, b.bin_name, 0 empty_count, ".
+  "(SELECT COUNT(*) FROM empty e2 ".
+  (empty($person) ? "" : "INNER JOIN person p ON p.person_id=e2.person_id AND p.initials='" . $person . "' ").     
+  "WHERE e2.bin_no=b.bin_no " .
+   (($period==0) ? "" : " AND e2.emptied_date >= (NOW() - INTERVAL " . $period . " MONTH)"). ") total_count ".
+  "FROM bin b " .
+  "WHERE b.active=1 " .
+  "ORDER BY 4 DESC, 1";
 $result = $conn->query($sql);
 if ($result->num_rows > 0) {
     $prev_list = "";
@@ -332,13 +413,21 @@ var chrtBin = new Chart(ctx, {
     plugins: {
         title: {
           display: true,
+<? if (empty($person)) {?>
           text: "Empties by bin and status (only currently active)"
+<? } else { ?>
+          text: "Empties by bin and status (only currently active) for <?=$person?>"
+<? }?>
         },
     },
     responsive: true,
     scales: {
       x: {
         stacked: true,
+        grid: {
+          display: false
+        },
+        
         ticks: {
           minRotation: 90,
           maxRotation: 90,
@@ -349,7 +438,10 @@ var chrtBin = new Chart(ctx, {
         }
       },
       y: {
-        stacked: true
+        stacked: true,
+        ticks: {
+          precision: 0
+        }
       }
     }
  }
