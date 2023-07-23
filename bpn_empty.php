@@ -221,7 +221,9 @@ if (empty($person_id)) {
       </table></div>
 <?      
     }   
-
+?>
+    <div><h2><a href="bpn_stats.php">View the full stats</a></h2></div>
+<?   
     $sql = 
       "SELECT r.bin_no, b.bin_name, " .
       "  DATE_FORMAT(r.reported_date, '%d %b %l:%i %p') last_scanned, ".
