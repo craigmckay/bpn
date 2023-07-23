@@ -132,6 +132,7 @@ dt {
     "      FROM report " . 
     "      GROUP BY bin_no " . 
     "    ) " . 
+    "    AND b.active=1 ".
     ") t " . 
     "WHERE DATEDIFF(NOW(), latest_activity)>7 " . 
     "ORDER BY latest_activity";
