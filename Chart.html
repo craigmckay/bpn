@@ -1,0 +1,95 @@
+<html>
+<head>
+<style>
+    #div {
+        top: 50%; /* IMPORTANT */
+        left: 50%; /* IMPORTANT */
+        display: block;
+        position: absolute;
+        /*background: url(images/background.png) no-repeat center center;*/
+        width: 750px;
+        height: 417px;
+
+        margin-top: -208.5px; /* HALF OF THE HEIGHT */
+        margin-left: -375px; /* HALF OF THE WIDTH */
+    }
+
+</style>
+</head>
+<body>
+<div id="div">
+  <canvas id="myChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<script>  
+
+const chartColors = {
+    red: 'rgb(255, 99, 132)',
+    orange: 'rgb(255, 159, 64)',
+    yellow: 'rgb(255, 205, 86)',
+    green: 'rgb(75, 192, 192)',
+    blue: 'rgb(54, 162, 235)',
+    purple: 'rgb(153, 102, 255)',
+    grey: 'rgb(201, 203, 207)'
+};
+var ctx = document.getElementById('myChart');
+
+var overflow = [135850, 52122, 148825, 16939, 9763];
+var full = [52122, 148825, 16939, 9763, 5];
+var some = [148825, 16939, 9763, 10, 2000];
+var none = [52122, 135850, 148825, 16939, 9763];
+var frameworks = ['React', 'Angular', 'Vue', 'Hyperapp', 'Omi'];
+
+var myChart = new Chart(ctx, {
+ type: 'bar',
+ data: {
+    labels: frameworks,
+    datasets: [
+    {
+      label: 'Overflowing',
+      data: overflow,
+      backgroundColor: chartColors.red,
+    },
+    {
+      label: 'Full',
+      data: full,
+      backgroundColor: chartColors.orange,
+    },
+    {
+      label: 'Some',
+      data: some,
+      backgroundColor: chartColors.yellow,
+    },
+    {
+      label: 'None',
+      data: none,
+      backgroundColor: chartColors.grey,
+    }
+  ]
+ },
+ options: {
+    plugins: {
+        legend: {
+            display: false
+        },
+    },
+    responsive: true,
+        scales: {
+          x: {
+            stacked: true,
+          },
+          y: {
+            stacked: true
+          }
+        }        
+ }
+})
+  
+  </script>
+ 
+
+</body>
+</html>
