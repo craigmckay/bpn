@@ -132,7 +132,7 @@ if (empty($person_id)) {
         <input type="radio" id="contents[0]" name="contents" value="Empty"><label for="contents[0]">Empty</label>
         <input type="radio" id="contents[1]" name="contents" value="Some"><label for="contents[1]">Some</label>
         <input type="radio" id="contents[2]" name="contents" value="Full" checked="checked"><label for="contents[2]">Full</label>
-        <input type="radio" id="contents[3]" name="contents" value="Overflowing"><label for="contents[3]">Overflowing</label>
+        <input type="radio" id="contents[3]" name="contents" value="Overflowing"><label for="contents[3]">Overflow</label>
       </td>
       </tr>
       <tr>
