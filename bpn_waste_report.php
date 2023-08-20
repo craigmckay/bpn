@@ -37,17 +37,30 @@ h1, p {
 <h1>The QR code you have scanned is incorrect.  Please email <a href="mailto:brechinpathnetwork@googlegroups.com">brechinpathnetwork@googlegroups.com</a>.</h1>
 <?
 } else {
-  $sql = "INSERT INTO report (bin_no, remote_addr, http_user_agent) VALUES ('" . $bin_no . "', '" . 
-    $_SERVER['REMOTE_ADDR'] . "', '" . $_SERVER['HTTP_USER_AGENT'] . "');";
+  $sql =
+    "SELECT COUNT(*) recent_reports " .
+    "FROM report r " .
+    "WHERE bin_no='" . $bin_no . "' " .
+    "AND TIMESTAMPDIFF(MINUTE,reported_date,NOW()) < 5";
+    echo $sql;
+  $result = $conn->query($sql);
+  if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+      if ($row['recent_reports']==0) {
+        $sql = "INSERT INTO report (bin_no, remote_addr, http_user_agent) VALUES ('" . $bin_no . "', '" . 
+          $_SERVER['REMOTE_ADDR'] . "', '" . $_SERVER['HTTP_USER_AGENT'] . "');";
 
-  $conn->query($sql);
-  $conn->close();
+        $conn->query($sql);
+        $conn->close();
 
-  $to_email = "brechinpathnetwork@googlegroups.com";
-  $subject = "Empty Waste Bin (" . $bin_no . ") - " . $bin_name;
-  $message = $subject . "\r\n\r\nNeed the map? https://southesk.com/bpn \r\n\r\nhttps://southesk.com/bpn_stats.php \r\n\r\n";
-  $headers = ""; //"From: craigamckay@gmail.com";
-  mail($to_email,$subject,$message,$headers);
+        $to_email = "brechinpathnetwork@googlegroups.com";
+        $subject = "Empty Waste Bin (" . $bin_no . ") - " . $bin_name;
+        $message = $subject . "\r\n\r\nNeed the map? https://southesk.com/bpn \r\n\r\nhttps://southesk.com/bpn_stats.php \r\n\r\n";
+        $headers = ""; //"From: craigamckay@gmail.com";
+        mail($to_email,$subject,$message,$headers);
+      }
+    }
+  }
 ?>
 <html>
 <head>
