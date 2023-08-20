@@ -174,7 +174,10 @@ if (empty($person_id)) {
 </form>
 <?
 } else {
-  $sql = "SELECT bin_name FROM bin WHERE active=1 AND bin_no=" . $bin_no;
+  $sql = 
+    "SELECT b.bin_name, ".
+    "(SELECT COUNT(*) FROM empty WHERE bin_no=b.bin_no AND person_id='"  . $person_id . "' AND TIMESTAMPDIFF(MINUTE,emptied_date,NOW()) < 15) recent_empties ".
+    "FROM bin b WHERE b.active=1 AND b.bin_no=" . $bin_no;
   $result = $conn->query($sql);
   
   if ($result->num_rows > 0) {
@@ -184,42 +187,23 @@ if (empty($person_id)) {
     
     if(empty($_POST["contents"])) $contents = "Full";
     
-    $sql = "INSERT INTO empty (bin_no, person_id, contents) VALUES ('" . $bin_no . "', '"  . $person_id . "', '"  . $contents . "');";
-    $conn->query($sql);
+    if ($row['recent_empties'] == 0) {
+      $sql = "INSERT INTO empty (bin_no, person_id, contents) VALUES ('" . $bin_no . "', '"  . $person_id . "', '"  . $contents . "');";
+      $conn->query($sql);
+      
+      $to_email = "brechinpathnetwork@googlegroups.com";
+      //$to_email = "craig@southesk.com";
+      $subject = $person_name . " has emptied Bin (" . $bin_no . ") - " . $bin_name . " - " . $contents;
+      $message = $subject . "\r\n\r\nNeed the map? https://southesk.com/bpn \r\n\r\nhttps://southesk.com/bpn_stats.php\r\n\r\n";
+      $headers = ""; //"From: craigamckay@gmail.com";
+      mail($to_email,$subject,$message,$headers);
+    }
     
-    $to_email = "brechinpathnetwork@googlegroups.com";
-    //$to_email = "craig@southesk.com";
-    $subject = $person_name . " has emptied Bin (" . $bin_no . ") - " . $bin_name . " - " . $contents;
-    $message = $subject . "\r\n\r\nNeed the map? https://southesk.com/bpn \r\n\r\nhttps://southesk.com/bpn_stats.php\r\n\r\n";
-    $headers = ""; //"From: craigamckay@gmail.com";
-    mail($to_email,$subject,$message,$headers);
-
     echo "<h1>Thank you, " . $person_name . ", for empting Bin <span class='bin'>$bin_no</span> <span class='binname'>" . $bin_name . "</span> &mdash; <span class='contents'>" . $contents . "</span></h1>";
     
-    
     // https://dancer/bpn/bpn_empty.php?person=CM391F9F
-    // 
     
-    
-    $sql = 
-      "SELECT DATE_FORMAT(e.emptied_date, '%l:%i %p') emptied_time, e.bin_no, b.bin_name, e.contents " .
-      "FROM empty e INNER JOIN bin b ON b.bin_no=e.bin_no " .
-      "WHERE e.person_id='" . $person_id . "' " .
-      "AND e.emptied_date >= DATE_SUB(NOW(), INTERVAL 2 HOUR) " .      
-      "ORDER BY e.empty_id DESC";
-    $result = $conn->query($sql);
-    if ($result->num_rows > 0) {
-?>
-      <div><h2>Your empties in the last two hours</h2>
-      <table border=1 cellpadding=10 cellspacing=0>
-<?      
-      while ($row = $result->fetch_assoc()) {
-        echo "<tr><td>" . $row["emptied_time"] . "</td><td>#<b>" . $row["bin_no"] . "</b>&nbsp;" . $row["bin_name"] . "</td><td>" . $row["contents"] . "</td></tr>";
-      }
-?>
-      </table></div>
-<?      
-    }   
+    recent_empties($conn, $person_id);
 ?>
     <div><h2><a href="bpn_stats.php">View the full stats</a></h2></div>
 <?   

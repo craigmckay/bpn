@@ -85,4 +85,26 @@ function table_bins_empty_old($conn) {
 <?
   }
 }
+
+function recent_empties($conn, $person_id) {  
+    $sql = 
+      "SELECT DATE_FORMAT(e.emptied_date, '%l:%i %p') emptied_time, e.bin_no, b.bin_name, e.contents " .
+      "FROM empty e INNER JOIN bin b ON b.bin_no=e.bin_no " .
+      "WHERE e.person_id='" . $person_id . "' " .
+      "AND e.emptied_date >= DATE_SUB(NOW(), INTERVAL 2 HOUR) " .      
+      "ORDER BY e.empty_id DESC";
+    $result = $conn->query($sql);
+    if ($result->num_rows > 0) {
+?>
+      <div><h2>Your empties in the last two hours</h2>
+      <table border=1 cellpadding=10 cellspacing=0>
+<?      
+      while ($row = $result->fetch_assoc()) {
+        echo "<tr><td>" . $row["emptied_time"] . "</td><td>#<b>" . $row["bin_no"] . "</b>&nbsp;" . $row["bin_name"] . "</td><td>" . $row["contents"] . "</td></tr>";
+      }
+?>
+      </table></div>
+<?      
+    }   
+}
 ?>
