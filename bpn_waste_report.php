@@ -53,7 +53,7 @@ h1, p {
 <head>
 <title>Empty Waste Bin #<?=$bin_no?> at <?=$bin_name?></title>
 <style>
-h1, h2, p {
+h1, h2, h3, p {
   font-family: "Arial";
 }
 </style>
@@ -61,9 +61,12 @@ h1, h2, p {
 
 <body>
   <h1>Brechin Path Network Bin #<?=$bin_no?> at <?=$bin_name?></h1>
-  <h2>Thank you for reporting this Brechin Path Network Bin needs to be emptied.</h2>
-  <p>Someone will attend to it soon.</p>
-  <p>Have a good day!</p>
+  
+  <h2>Thank you for reporting this Brechin Path Network Bin needs to be emptied... a <u>volunteer</u> will attend to it soon.</h2>
+  
+  <h3>Want to know more, or get involved?  Please email <a href="mailto:brechinpathnetwork@googlegroups.com?Subject=More%20about%20Brechin%20Path%20Network%20Bins">brechinpathnetwork@googlegroups.com</a>.</h3>
+
+  <h3><a href="bpn_stats.php">View the full stats</a></h3>
 <?
 }
 ?>

@@ -115,38 +115,46 @@ if (empty($person_id)) {
             <dt><input type="radio" id="bin_no[9]" name="bin_no" value="9"><label for="bin_no[9]"><span class='bin'>9</span> Rough Moss Bottom</label></dt>
             <dt><input type="radio" id="bin_no[10]" name="bin_no" value="10"><label for="bin_no[10]"><span class='bin'>10</span> Burghill West Bench</label></dt>
             <dt><input type="radio" id="bin_no[11]" name="bin_no" value="11"><label for="bin_no[11]"><span class='bin'>11</span> Stannochy Pink Cottage</label></dt>
+<!--            
             <dt><input type="radio" id="bin_no[12]" name="bin_no" value="12"><label for="bin_no[12]"><span class='bin'>12</span> Aberlemno Toll</label></dt>
+-->
             <dt><input type="radio" id="bin_no[13]" name="bin_no" value="13"><label for="bin_no[13]"><span class='bin'>13</span> Pittendreich</label></dt>
             <dt><input type="radio" id="bin_no[14]" name="bin_no" value="14"><label for="bin_no[14]"><span class='bin'>14</span> Pittendreich Grosefield Halfway</label></dt>
             <dt><input type="radio" id="bin_no[15]" name="bin_no" value="15"><label for="bin_no[15]"><span class='bin'>15</span> Grosefield</label></dt>
-            <dt><input type="radio" id="bin_no[16]" name="bin_no" value="16"><label for="bin_no[16]"><span class='bin'>16</span> Parkend</label></dt>
-            <dt><input type="radio" id="bin_no[17]" name="bin_no" value="17"><label for="bin_no[17]"><span class='bin'>17</span> Limefield</label></dt>
-            <dt><input type="radio" id="bin_no[18]" name="bin_no" value="18"><label for="bin_no[18]"><span class='bin'>18</span> Trinity</label></dt>
-            <dt><input type="radio" id="bin_no[19]" name="bin_no" value="19"><label for="bin_no[19]"><span class='bin'>19</span> Tilygloom</label></dt>
-            <dt><input type="radio" id="bin_no[20]" name="bin_no" value="20"><label for="bin_no[20]"><span class='bin'>20</span> Pitforthie</label></dt>
-
           </dl>
         </td><td valign="top">
           <dl>
+            <dt><input type="radio" id="bin_no[16]" name="bin_no" value="16"><label for="bin_no[16]"><span class='bin'>16</span> Parkend</label></dt>
+            <dt><input type="radio" id="bin_no[17]" name="bin_no" value="17"><label for="bin_no[17]"><span class='bin'>17</span> Limefield</label></dt>
+            <dt><input type="radio" id="bin_no[37]" name="bin_no" value="37"><label for="bin_no[37]"><span class='bin'>37</span> BSM</label></dt>
+
+            <dt><input type="radio" id="bin_no[18]" name="bin_no" value="18"><label for="bin_no[18]"><span class='bin'>18</span> Trinity</label></dt>
+            <dt><input type="radio" id="bin_no[19]" name="bin_no" value="19"><label for="bin_no[19]"><span class='bin'>19</span> Tilygloom</label></dt>
+            <dt><input type="radio" id="bin_no[20]" name="bin_no" value="20"><label for="bin_no[20]"><span class='bin'>20</span> Pitforthie</label></dt>
+<!--
             <dt><input type="radio" id="bin_no[21]" name="bin_no" value="21"><label for="bin_no[21]"><span class='bin'>21</span> Brechin Bridge</label></dt>
             <dt><input type="radio" id="bin_no[22]" name="bin_no" value="22"><label for="bin_no[22]"><span class='bin'>22</span> Mid Wee Wood</label></dt>
             <dt><input type="radio" id="bin_no[23]" name="bin_no" value="23"><label for="bin_no[23]"><span class='bin'>23</span> Rugby Pitch NE</label></dt>
             <dt><input type="radio" id="bin_no[24]" name="bin_no" value="24"><label for="bin_no[24]"><span class='bin'>24</span> Rugby Pitch SE</label></dt>
+-->            
             <dt><input type="radio" id="bin_no[25]" name="bin_no" value="25"><label for="bin_no[25]"><span class='bin'>25</span> Mains of Pitforthie</label></dt>
             <dt><input type="radio" id="bin_no[26]" name="bin_no" value="26"><label for="bin_no[26]"><span class='bin'>26</span> Eggbox</label></dt>
+<!--            
             <dt><input type="radio" id="bin_no[27]" name="bin_no" value="27"><label for="bin_no[27]"><span class='bin'>27</span> Andover Railway</label></dt>
+-->            
             <dt><input type="radio" id="bin_no[28]" name="bin_no" value="28"><label for="bin_no[28]"><span class='bin'>28</span> BMX Track</label></dt>
             <dt><input type="radio" id="bin_no[29]" name="bin_no" value="29"><label for="bin_no[29]"><span class='bin'>29</span> Park Rd Drumachlie Steps</label></dt>
             <dt><input type="radio" id="bin_no[30]" name="bin_no" value="30"><label for="bin_no[30]"><span class='bin'>30</span> Drumachlie Railway Bridge</label></dt>
 <!--            
             <dt><input type="radio" id="bin_no[31]" name="bin_no" value="31"><label for="bin_no[31]"><span class='bin'>31</span> Skinners Burn</label></dt>
--->
             <dt><input type="radio" id="bin_no[32]" name="bin_no" value="32"><label for="bin_no[32]"><span class='bin'>32</span> Brechin Bridge Half-way</label></dt>
+-->
             <dt><input type="radio" id="bin_no[33]" name="bin_no" value="33"><label for="bin_no[33]"><span class='bin'>33</span> Slaughterhouse</label></dt>
+<!--
             <dt><input type="radio" id="bin_no[34]" name="bin_no" value="34"><label for="bin_no[34]"><span class='bin'>34</span> Rugby Pitch North</label></dt>
+-->            
             <dt><input type="radio" id="bin_no[35]" name="bin_no" value="35"><label for="bin_no[35]"><span class='bin'>35</span> Bearehill Arches</label></dt>
             <dt><input type="radio" id="bin_no[36]" name="bin_no" value="36"><label for="bin_no[36]"><span class='bin'>36</span> Hollingworth Way</label></dt>
-            <dt><input type="radio" id="bin_no[37]" name="bin_no" value="37"><label for="bin_no[37]"><span class='bin'>37</span> BSM</label></dt>
           </dl>
         </td>
       </tr>
