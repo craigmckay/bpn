@@ -1,16 +1,6 @@
 <?php 
+include_once 'bpn_db.php';
 
-$servername = "localhost";
-$username = "southesk_bpn";
-$password = "__REMOVED_SEE_config.php__";
-
-// Create connection
-$conn = new mysqli($servername, $username, $password, $username);
-
-// Check connection
-if ($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
-}
 $bin_no = NULL; if(!empty($_GET["bin_no"])) $bin_no = $_GET["bin_no"];
 $bin_name = NULL;
 
@@ -47,23 +37,35 @@ h1, p {
 <h1>The QR code you have scanned is incorrect.  Please email <a href="mailto:brechinpathnetwork@googlegroups.com">brechinpathnetwork@googlegroups.com</a>.</h1>
 <?
 } else {
-  $sql = "INSERT INTO report (bin_no, remote_addr, http_user_agent) VALUES ('" . $bin_no . "', '" . 
-    $_SERVER['REMOTE_ADDR'] . "', '" . $_SERVER['HTTP_USER_AGENT'] . "');";
+  $sql =
+    "SELECT COUNT(*) recent_reports " .
+    "FROM report r " .
+    "WHERE bin_no='" . $bin_no . "' " .
+    "AND TIMESTAMPDIFF(MINUTE,reported_date,NOW()) < 5";
+  $result = $conn->query($sql);
+  if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+      if ($row['recent_reports']==0) {
+        $sql = "INSERT INTO report (bin_no, remote_addr, http_user_agent) VALUES ('" . $bin_no . "', '" . 
+          $_SERVER['REMOTE_ADDR'] . "', '" . $_SERVER['HTTP_USER_AGENT'] . "');";
 
-  $conn->query($sql);
-  $conn->close();
+        $conn->query($sql);
+        $conn->close();
 
-  $to_email = "brechinpathnetwork@googlegroups.com";
-  $subject = "Empty Waste Bin (" . $bin_no . ") - " . $bin_name;
-  $message = $subject . "\r\n\r\nNeed the map? https://southesk.com/bpn \r\n\r\n";
-  $headers = ""; //"From: craigamckay@gmail.com";
-  mail($to_email,$subject,$message,$headers);
+        $to_email = "brechinpathnetwork@googlegroups.com";
+        $subject = "Empty Waste Bin (" . $bin_no . ") - " . $bin_name;
+        $message = $subject . "\r\n\r\nNeed the map? https://southesk.com/bpn \r\n\r\nhttps://southesk.com/bpn_stats.php \r\n\r\n";
+        $headers = ""; //"From: craigamckay@gmail.com";
+        mail($to_email,$subject,$message,$headers);
+      }
+    }
+  }
 ?>
 <html>
 <head>
 <title>Empty Waste Bin #<?=$bin_no?> at <?=$bin_name?></title>
 <style>
-h1, h2, p {
+h1, h2, h3, p {
   font-family: "Arial";
 }
 </style>
@@ -71,9 +73,12 @@ h1, h2, p {
 
 <body>
   <h1>Brechin Path Network Bin #<?=$bin_no?> at <?=$bin_name?></h1>
-  <h2>Thank you for reporting this Brechin Path Network Bin needs to be emptied.</h2>
-  <p>Someone will attend to it soon.</p>
-  <p>Have a good day!</p>
+  
+  <h2>Thank you for reporting this Brechin Path Network Bin needs to be emptied... a <u>volunteer</u> will attend to it soon.</h2>
+  
+  <h3>Want to know more, or get involved?  Please email <a href="mailto:brechinpathnetwork@googlegroups.com?Subject=More%20about%20Brechin%20Path%20Network%20Bins">brechinpathnetwork@googlegroups.com</a>.</h3>
+
+  <h3><a href="bpn_stats.php">View the full stats</a></h3>
 <?
 }
 ?>
