@@ -190,7 +190,7 @@ if (empty($person_id)) {
     $to_email = "brechinpathnetwork@googlegroups.com";
     //$to_email = "craig@southesk.com";
     $subject = $person_name . " has emptied Bin (" . $bin_no . ") - " . $bin_name . " - " . $contents;
-    $message = $subject . "\r\n\r\nNeed the map? https://southesk.com/bpn \r\n\r\n";
+    $message = $subject . "\r\n\r\nNeed the map? https://southesk.com/bpn \r\n\r\nhttps://southesk.com/bpn_stats.php\r\n\r\n";
     $headers = ""; //"From: craigamckay@gmail.com";
     mail($to_email,$subject,$message,$headers);
 
