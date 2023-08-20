@@ -1,5 +1,6 @@
 <?php 
 include_once 'bpn_db.php';
+include_once 'bpn_util.php';
 
 $person = NULL; if(!empty($_GET["person"])) $person = $_GET["person"];
 $bin_no = NULL; if(!empty($_POST["bin_no"])) $bin_no = $_POST["bin_no"];
@@ -214,34 +215,7 @@ if (empty($person_id)) {
 ?>
     <div><h2><a href="bpn_stats.php">View the full stats</a></h2></div>
 <?   
-    $sql = 
-      "SELECT r.bin_no, b.bin_name, " .
-      "  DATE_FORMAT(r.reported_date, '%d %b %l:%i %p') last_scanned, ".
-      "  DATE_FORMAT((SELECT MAX(emptied_date) FROM empty WHERE bin_no=r.bin_no), '%d %b %l:%i %p') last_emptied " .
-      "FROM report r " .
-      "INNER JOIN bin b ON b.bin_no=r.bin_no " .
-      "WHERE report_id IN ( " .
-      "  SELECT MAX(report_id) " .
-      "  FROM report " .
-      "  WHERE (SELECT MAX(emptied_date) FROM empty WHERE bin_no=report.bin_no) < reported_date " .
-      "  GROUP BY bin_no " .
-      ") " .
-      "AND b.active=1 " .
-      "ORDER BY r.reported_date ";
-    $result = $conn->query($sql);
-    if ($result->num_rows > 0) {
-?>
-      <div><h2>Bins probably needing emptying</h2>
-      <table border=1 cellpadding=10 cellspacing=0>
-      <tr><th>Bin</th><th>Last Scanned</th><th>Last Emptied</th></tr>
-<?      
-      while ($row = $result->fetch_assoc()) {
-        echo "<tr><td>#<b>" . $row["bin_no"] . "</b>&nbsp;" . $row["bin_name"] . "</td><td>" . $row["last_scanned"] . "</td><td>" . $row["last_emptied"] . "</td></tr>";
-      }
-?>
-      </table></div>
-<?
-    }   
+    table_bins_empty_probably($conn);
   }
 }
 
