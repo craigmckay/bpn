@@ -231,7 +231,7 @@ if (empty($person_id)) {
     $result = $conn->query($sql);
     if ($result->num_rows > 0) {
 ?>
-      <div><h2>Bins maybe needing emptying</h2>
+      <div><h2>Bins probably needing emptying</h2>
       <table border=1 cellpadding=10 cellspacing=0>
       <tr><th>Bin</th><th>Last Scanned</th><th>Last Emptied</th></tr>
 <?      
