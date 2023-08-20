@@ -42,7 +42,6 @@ h1, p {
     "FROM report r " .
     "WHERE bin_no='" . $bin_no . "' " .
     "AND TIMESTAMPDIFF(MINUTE,reported_date,NOW()) < 5";
-    echo $sql;
   $result = $conn->query($sql);
   if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
