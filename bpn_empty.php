@@ -2,7 +2,7 @@
 include_once 'bpn_db.php';
 include_once 'bpn_util.php';
 
-$person = NULL; if(!empty($_GET["person"])) $person = $_GET["person"];
+$person = NULL; if(!empty($_GET["person"])) $person = TRIM($_GET["person"]);
 $bin_no = NULL; if(!empty($_POST["bin_no"])) $bin_no = $_POST["bin_no"];
 $contents = NULL; if(!empty($_POST["contents"])) $contents = $_POST["contents"];
 
