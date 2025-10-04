@@ -131,6 +131,12 @@ dt {
     let url = urlPieces.join('')
     top.location.href=url + "?person=" + person <?php echo (($period==0) ? "" : "+ \"&period=".$period . "\"")?>;
   }
+  function refreshBin(bin_no) {
+    const path = location.pathname.substring(0, location.pathname.lastIndexOf('/')) + "/";
+    const urlPieces = [location.protocol, '//', location.host, path, 'bpn_stats_bin.php']
+    let url = urlPieces.join('')
+    top.location.href=url + "?bin_no=" + bin_no <?php echo (($period==0) ? "" : "+ \"&period=".$period . "\"")?>;
+  }
 </script>
 </head>
 
@@ -208,8 +214,6 @@ if ($result->num_rows > 0) {
 ?>
 ];
 
-//const debug = document.getElementById('debug');
-//debug.innerText = "<?=$sql?>";
 
 var people = [
 <?php
@@ -436,6 +440,17 @@ var chrtBin = new Chart(ctx, {
     }
  }
 })
+
+ctx.onclick = function(evt) {
+  const points = chrtBin.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+
+  if (points.length) {
+    var firstPoint = points[0];
+    var label = chrtBin.data.labels[firstPoint.index];
+    var bin = label.split(" ");
+    refreshBin(bin[0]);
+  }
+}
 </script>
 
 <?
