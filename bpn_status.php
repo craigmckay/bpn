@@ -36,7 +36,7 @@ input[type=radio] {
 </head>
 
 <body>
-<?
+<?php
   table_bins_empty_probably($conn);
   table_bins_empty_old($conn);
 

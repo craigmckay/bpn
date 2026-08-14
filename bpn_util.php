@@ -33,7 +33,7 @@ function table_bins_empty_probably($conn) {
   <div><h2>Bins probably needing emptying</h2>
   <table border=1 cellpadding=10 cellspacing=0>
   <tr><th>Bin</th><th>Last Scanned</th><th>Last Emptied</th><th>Indicator</th></tr>
-<?
+<?php
     while ($row = $result->fetch_assoc()) {
       echo "<tr><td>#<b>" . $row["bin_no"] . "</b>&nbsp;" . $row["bin_name"] . 
         "</td><td>" . $row["last_scanned"] . "</td><td>" . $row["last_emptied"] . 
@@ -41,7 +41,7 @@ function table_bins_empty_probably($conn) {
     }
 ?>
       </table></div>
-<?
+<?php
   }
 }
 
@@ -75,36 +75,39 @@ function table_bins_empty_old($conn) {
   <div><h2>Over a week since scanned or emptied</h2>
   <table border=1 cellpadding=10 cellspacing=0>
   <tr><th>Bin</th><th>Last Scanned</th><th>Last Emptied</th><th>Indicator</th></tr>
-<?
+<?php
     while ($row = $result->fetch_assoc()) {
       echo "<tr><td>#<b>" . $row["bin_no"] . "</b>&nbsp;" . $row["bin_name"] . "</td><td>" . 
         $row["last_scanned"] . "</td><td>" . $row["last_emptied"] . "</td><td><div><div style=\"float:left;background-color:rgb(255, 159, 64);height:30px;width:" . ($row["days_since_latest_activity"]*10) . "px\"></div></div></td></tr>";
     }
 ?>
       </table></div>
-<?
+<?php
   }
 }
 
 function recent_empties($conn, $person_id) {  
-    $sql = 
+    $stmt = $conn->prepare(
       "SELECT DATE_FORMAT(e.emptied_date, '%l:%i %p') emptied_time, e.bin_no, b.bin_name, e.contents " .
       "FROM empty e INNER JOIN bin b ON b.bin_no=e.bin_no " .
-      "WHERE e.person_id='" . $person_id . "' " .
-      "AND e.emptied_date >= DATE_SUB(NOW(), INTERVAL 2 HOUR) " .      
-      "ORDER BY e.empty_id DESC";
-    $result = $conn->query($sql);
+      "WHERE e.person_id=? " .
+      "AND e.emptied_date >= DATE_SUB(NOW(), INTERVAL 2 HOUR) " .
+      "ORDER BY e.empty_id DESC");
+    $stmt->bind_param("i", $person_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
     if ($result->num_rows > 0) {
 ?>
       <div><h2>Your empties in the last two hours</h2>
       <table border=1 cellpadding=10 cellspacing=0>
-<?      
+<?php      
       while ($row = $result->fetch_assoc()) {
-        echo "<tr><td>" . $row["emptied_time"] . "</td><td>#<b>" . $row["bin_no"] . "</b>&nbsp;" . $row["bin_name"] . "</td><td>" . $row["contents"] . "</td></tr>";
+        echo "<tr><td>" . bpn_h($row["emptied_time"]) . "</td><td>#<b>" . bpn_h($row["bin_no"]) . "</b>&nbsp;" . bpn_h($row["bin_name"]) . "</td><td>" . bpn_h($row["contents"]) . "</td></tr>";
       }
+      $stmt->close();
 ?>
       </table></div>
-<?      
+<?php      
     }   
 }
 ?>

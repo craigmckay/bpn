@@ -90,10 +90,10 @@ locally this is served from XAMPP at `C:\xampp\htdocs\bpn`.
    Then edit `config.php` with your database host, name, user and password.
    `config.php` is gitignored and must never be committed.
 
-3. **Enable short open tags.** The pages use `<?` rather than `<?php` in places, so
-   `short_open_tag = On` is needed in `php.ini` or they will render as plain text.
+3. Browse to `http://localhost/bpn/bpn_status.php`.
 
-4. Browse to `http://localhost/bpn/bpn_status.php`.
+No `php.ini` changes are needed. The pages use `<?php` throughout, and the `<?=` short
+echo tags they rely on are available unconditionally in PHP 5.4 and later.
 
 Note that the "emailing" steps use PHP's `mail()`, which generally won't do anything
 useful on a local XAMPP install. The pages still work; the mail just goes nowhere.

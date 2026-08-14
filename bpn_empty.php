@@ -3,18 +3,24 @@ include_once 'bpn_db.php';
 include_once 'bpn_util.php';
 
 $person = NULL; if(!empty($_GET["person"])) $person = TRIM($_GET["person"]);
-$bin_no = NULL; if(!empty($_POST["bin_no"])) $bin_no = $_POST["bin_no"];
-$contents = NULL; if(!empty($_POST["contents"])) $contents = $_POST["contents"];
+$bin_no = NULL; if(!empty($_POST["bin_no"])) $bin_no = bpn_int($_POST["bin_no"], 0);
+$contents = NULL; if(!empty($_POST["contents"])) $contents = bpn_contents($_POST["contents"]);
 
-$sql = "SELECT person_id, person_name FROM person WHERE person_key='" . SUBSTR($person,0,8) . "'";
 $person_id = NULL;
 $person_name = NULL;
-$result = $conn->query($sql);
-if ($result->num_rows > 0) {
-    if ($row = $result->fetch_assoc()) {
-      $person_id = $row["person_id"];
-      $person_name = $row["person_name"];
-    }
+if (!empty($person)) {
+  $person_key = SUBSTR($person,0,8);
+  $stmt = $conn->prepare("SELECT person_id, person_name FROM person WHERE person_key=?");
+  $stmt->bind_param("s", $person_key);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  if ($result->num_rows > 0) {
+      if ($row = $result->fetch_assoc()) {
+        $person_id = $row["person_id"];
+        $person_name = $row["person_name"];
+      }
+  }
+  $stmt->close();
 }
 ?>
 <html>
@@ -28,7 +34,7 @@ if ($result->num_rows > 0) {
 
   gtag('config', 'G-MPXXSQYB9E');
 </script>
-<title>Waste Bin Emptied<? if (!empty($person_name)) { echo " by " . $person_name; }?></title>
+<title>Waste Bin Emptied<?php if (!empty($person_name)) { echo " by " . bpn_h($person_name); }?></title>
 <style>
 h1, h2, p, label, dt, td, th {
   font-family: "Arial";
@@ -91,11 +97,11 @@ dt {
 </head>
 
 <body>
-<?
+<?php
 if (empty($person_id)) {
 ?>
 <p>Sorry, you have an invalid QR code.</p>
-<?
+<?php
 } else if (empty($bin_no)) {
 ?>
 <form method="post">
@@ -172,25 +178,30 @@ if (empty($person_id)) {
     </table>
   </div>
 </form>
-<?
+<?php
 } else {
-  $sql = 
+  $stmt = $conn->prepare(
     "SELECT b.bin_name, ".
-    "(SELECT COUNT(*) FROM empty WHERE bin_no=b.bin_no AND person_id='"  . $person_id . "' AND TIMESTAMPDIFF(MINUTE,emptied_date,NOW()) < 15) recent_empties ".
-    "FROM bin b WHERE b.active=1 AND b.bin_no=" . $bin_no;
-  $result = $conn->query($sql);
-  
+    "(SELECT COUNT(*) FROM empty WHERE bin_no=b.bin_no AND person_id=? AND TIMESTAMPDIFF(MINUTE,emptied_date,NOW()) < 15) recent_empties ".
+    "FROM bin b WHERE b.active=1 AND b.bin_no=?");
+  $stmt->bind_param("ii", $person_id, $bin_no);
+  $stmt->execute();
+  $result = $stmt->get_result();
+
   if ($result->num_rows > 0) {
     if ($row = $result->fetch_assoc()) {
       $bin_name = $row["bin_name"];
     }
-    
+    $stmt->close();
+
     if(empty($_POST["contents"])) $contents = "Full";
-    
+
     if ($row['recent_empties'] == 0) {
-      $sql = "INSERT INTO empty (bin_no, person_id, contents) VALUES ('" . $bin_no . "', '"  . $person_id . "', '"  . $contents . "');";
-      $conn->query($sql);
-      
+      $insert = $conn->prepare("INSERT INTO empty (bin_no, person_id, contents) VALUES (?, ?, ?)");
+      $insert->bind_param("iis", $bin_no, $person_id, $contents);
+      $insert->execute();
+      $insert->close();
+
       $to_email = "brechinpathnetwork@googlegroups.com";
       //$to_email = "craig@southesk.com";
       $subject = $person_name . " has emptied Bin (" . $bin_no . ") - " . $bin_name . " - " . $contents;
@@ -199,14 +210,14 @@ if (empty($person_id)) {
       mail($to_email,$subject,$message,$headers);
     }
     
-    echo "<h1>Thank you, " . $person_name . ", for empting Bin <span class='bin'>$bin_no</span> <span class='binname'>" . $bin_name . "</span> &mdash; <span class='contents'>" . $contents . "</span></h1>";
+    echo "<h1>Thank you, " . bpn_h($person_name) . ", for empting Bin <span class='bin'>" . bpn_h($bin_no) . "</span> <span class='binname'>" . bpn_h($bin_name) . "</span> &mdash; <span class='contents'>" . bpn_h($contents) . "</span></h1>";
     
     // https://dancer/bpn/bpn_empty.php?person=CM391F9F
     
     recent_empties($conn, $person_id);
 ?>
     <div><h2><a href="bpn_stats.php">View the full stats</a></h2></div>
-<?   
+<?php   
     table_bins_empty_probably($conn);
   }
 }

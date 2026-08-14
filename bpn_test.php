@@ -2,23 +2,29 @@
 include_once 'bpn_db.php';
 
 $person = NULL; if(!empty($_GET["person"])) $person = $_GET["person"];
-$bin_no = NULL; if(!empty($_POST["bin_no"])) $bin_no = $_POST["bin_no"];
-$contents = NULL; if(!empty($_POST["contents"])) $contents = $_POST["contents"];
+$bin_no = NULL; if(!empty($_POST["bin_no"])) $bin_no = bpn_int($_POST["bin_no"], 0);
+$contents = NULL; if(!empty($_POST["contents"])) $contents = bpn_contents($_POST["contents"]);
 
-$sql = "SELECT person_id, person_name FROM person WHERE person_key='" . SUBSTR($person,0,8) . "'";
 $person_id = NULL;
 $person_name = NULL;
-$result = $conn->query($sql);
-if ($result->num_rows > 0) {
-    if ($row = $result->fetch_assoc()) {
-      $person_id = $row["person_id"];
-      $person_name = $row["person_name"];
-    }
+if (!empty($person)) {
+  $person_key = SUBSTR($person,0,8);
+  $stmt = $conn->prepare("SELECT person_id, person_name FROM person WHERE person_key=?");
+  $stmt->bind_param("s", $person_key);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  if ($result->num_rows > 0) {
+      if ($row = $result->fetch_assoc()) {
+        $person_id = $row["person_id"];
+        $person_name = $row["person_name"];
+      }
+  }
+  $stmt->close();
 }
 ?>
 <html>
 <head>
-<title>Waste Bin Emptied<? if (!empty($person_name)) { echo " by " . $person_name; }?></title>
+<title>Waste Bin Emptied<?php if (!empty($person_name)) { echo " by " . bpn_h($person_name); }?></title>
 <style>
 h1, h2, p, label, dt {
   font-family: "Arial";
@@ -63,11 +69,11 @@ dt {
 </head>
 
 <body>
-<?
+<?php
 if (empty($person_id)) {
 ?>
 <p>Sorry, you have an invalid QR code.</p>
-<?
+<?php
 } else if (empty($bin_no)) {
 ?>
 <form method="post">
@@ -131,20 +137,25 @@ if (empty($person_id)) {
     </table>
   </div>
 </form>
-<?
+<?php
 } else {
-  $sql = "SELECT bin_name FROM bin WHERE bin_no=" . $bin_no;
-  $result = $conn->query($sql);
-  
+  $stmt = $conn->prepare("SELECT bin_name FROM bin WHERE bin_no=?");
+  $stmt->bind_param("i", $bin_no);
+  $stmt->execute();
+  $result = $stmt->get_result();
+
   if ($result->num_rows > 0) {
     if ($row = $result->fetch_assoc()) {
       $bin_name = $row["bin_name"];
     }
-    
+    $stmt->close();
+
     if(empty($_POST["contents"])) $contents = "Full";
-    
-    $sql = "INSERT INTO empty (bin_no, person_id, contents) VALUES ('" . $bin_no . "', '"  . $person_id . "', '"  . $contents . "');";
-    $conn->query($sql);
+
+    $insert = $conn->prepare("INSERT INTO empty (bin_no, person_id, contents) VALUES (?, ?, ?)");
+    $insert->bind_param("iis", $bin_no, $person_id, $contents);
+    $insert->execute();
+    $insert->close();
     $conn->close();
     
     //$to_email = "brechinpathnetwork@googlegroups.com";
@@ -154,7 +165,7 @@ if (empty($person_id)) {
     $headers = ""; //"From: craigamckay@gmail.com";
     mail($to_email,$subject,$message,$headers);
 
-    echo "<h1>Thank you, " . $person_name . ", for empting Bin #$bin_no " . $bin_name . " (" . $contents . ")!</h1>";
+    echo "<h1>Thank you, " . bpn_h($person_name) . ", for empting Bin #" . bpn_h($bin_no) . " " . bpn_h($bin_name) . " (" . bpn_h($contents) . ")!</h1>";
   }
 }
 ?>

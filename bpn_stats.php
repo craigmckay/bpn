@@ -1,9 +1,13 @@
 <?php 
 include_once 'bpn_db.php';
 
-$person = NULL; if(!empty($_GET["person"])) $person = $_GET["person"];
-$period = 0; if(!empty($_GET["period"])) $period = $_GET["period"];
-$bin_no = NULL; if(!empty($_GET["bin_no"])) $bin_no = $_GET["bin_no"];
+// $person and $period are interpolated into conditionally-built query
+// fragments below, so they cannot be bound as parameters. They are forced
+// into a safe shape here instead: initials are letters only, period is an
+// integer number of months.
+$person = NULL; if(!empty($_GET["person"])) $person = bpn_initials($_GET["person"]);
+$period = 0; if(!empty($_GET["period"])) $period = bpn_int($_GET["period"], 0);
+$bin_no = NULL; if(!empty($_GET["bin_no"])) $bin_no = bpn_int($_GET["bin_no"], 0);
 ?>
 <html>
 <head>
@@ -407,11 +411,11 @@ var chrtBin = new Chart(ctx, {
     plugins: {
         title: {
           display: true,
-<? if (empty($person)) {?>
+<?php if (empty($person)) {?>
           text: "Empties by bin and status (only currently active)"
-<? } else { ?>
+<?php } else { ?>
           text: "Empties by bin and status (only currently active) for <?=$person?>"
-<? }?>
+<?php }?>
         },
     },
     responsive: true,
@@ -453,7 +457,7 @@ ctx.onclick = function(evt) {
 }
 </script>
 
-<?
+<?php
 $conn->close();
 ?>
 </body> 
