@@ -1,217 +1,221 @@
-<?php 
-include_once 'bpn_db.php';
-include_once 'bpn_util.php';
+<?php
+/**
+ * Volunteer landing page for an "I emptied this bin" QR scan.
+ *
+ * The volunteer is identified by a token in the URL (person.person_key).
+ * They pick a bin and how full it was; that writes a row to `empty` and
+ * emails the group.
+ *
+ * The bin list is read from the database - a bin with active=0 simply stops
+ * appearing, so retiring one is a data change, not an edit to this file.
+ */
 
-$person = NULL; if(!empty($_GET["person"])) $person = TRIM($_GET["person"]);
-$bin_no = NULL; if(!empty($_POST["bin_no"])) $bin_no = $_POST["bin_no"];
-$contents = NULL; if(!empty($_POST["contents"])) $contents = $_POST["contents"];
+include_once __DIR__ . '/bpnbins/bpn_util.php';
 
-$sql = "SELECT person_id, person_name FROM person WHERE person_key='" . SUBSTR($person,0,8) . "'";
+$person   = NULL; if (!empty($_GET["person"]))    $person   = trim($_GET["person"]);
+$bin_no   = NULL; if (!empty($_POST["bin_no"]))   $bin_no   = bpn_int($_POST["bin_no"], 0);
+$contents_id  = bpn_status_id($conn, $_POST["contents_id"]  ?? null, BPN_CONTENTS,  BPN_DEFAULT_CONTENTS);
+$condition_id = bpn_status_id($conn, $_POST["condition_id"] ?? null, BPN_CONDITION, BPN_DEFAULT_CONDITION);
+$comments     = mb_substr(trim((string) ($_POST["comments"] ?? '')), 0, 1000);
+
 $person_id = NULL;
 $person_name = NULL;
-$result = $conn->query($sql);
-if ($result->num_rows > 0) {
-    if ($row = $result->fetch_assoc()) {
-      $person_id = $row["person_id"];
-      $person_name = $row["person_name"];
-    }
-}
-?>
-<html>
-<head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-MPXXSQYB9E"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-MPXXSQYB9E');
-</script>
-<title>Waste Bin Emptied<? if (!empty($person_name)) { echo " by " . $person_name; }?></title>
-<style>
-h1, h2, p, label, dt, td, th {
-  font-family: "Arial";
-}
-h1, label, dt {
-  font-size: 4vw;
-}
-h2 {
-  font-size: 3.5vw;
-}
-td, th {
-  font-size: 3.5vw;
-}
-input[type=radio] {
-  border: 0px;
-  width: 4em;
-  height: 4em;
-}
-
-span.bin {
-  background-color: #FCC135;
-  color: black;
-  padding-left: 0.5vw;
-  padding-right: 0.5vw;
-  border: 5px solid #E31E24;
-  font-size: 4vw;
-}
-
-span.binname {
-  background-color: #006633;
-  color: white;
-  padding: 0.5vw;
-  font-size: 4vw;
-}
-
-span.contents {
-  color: #E31E24;
-}
-
-input[type=submit] {
-  background-color: #006633;
-  border: none;
-  color: white;
-  padding: 20px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 6vw;
-  margin: 4px 2px;
-  border-radius: 12px;
-}
-
-dt {
-   text-indent: -12vw;
-   padding-left: 12vw;
-   padding-bottom: 1vw;
-}
-
-</style>
-</head>
-
-<body>
-<?
-if (empty($person_id)) {
-?>
-<p>Sorry, you have an invalid QR code.</p>
-<?
-} else if (empty($bin_no)) {
-?>
-<form method="post">
-  <div id=binlist style="border:1px">
-    <table border="0" width="100%" height="100%">
-      <tr>      
-        <td valign="top">
-          <dl>
-            <dt><input type="radio" id="bin_no[1]" name="bin_no" value="1"><label for="bin_no[1]"><span class='bin'>1</span> Drumachlie</label></dt>
-            <dt><input type="radio" id="bin_no[2]" name="bin_no" value="2"><label for="bin_no[2]"><span class='bin'>2</span> Bluebell Bridge</label></dt>
-            <dt><input type="radio" id="bin_no[3]" name="bin_no" value="3"><label for="bin_no[3]"><span class='bin'>3</span> Trinity Leuchland Junction</label></dt>
-            <dt><input type="radio" id="bin_no[4]" name="bin_no" value="4"><label for="bin_no[4]"><span class='bin'>4</span> Leuchland</label></dt>
-            <dt><input type="radio" id="bin_no[5]" name="bin_no" value="5"><label for="bin_no[5]"><span class='bin'>5</span> Dalgety Bottom</label></dt>
-            <dt><input type="radio" id="bin_no[6]" name="bin_no" value="6"><label for="bin_no[6]"><span class='bin'>6</span> Dalgety Corner</label></dt>
-            <dt><input type="radio" id="bin_no[7]" name="bin_no" value="7"><label for="bin_no[7]"><span class='bin'>7</span> Hillhead</label></dt>
-            <dt><input type="radio" id="bin_no[8]" name="bin_no" value="8"><label for="bin_no[8]"><span class='bin'>8</span> Rough Moss Top</label></dt>
-            <dt><input type="radio" id="bin_no[9]" name="bin_no" value="9"><label for="bin_no[9]"><span class='bin'>9</span> Rough Moss Bottom</label></dt>
-            <dt><input type="radio" id="bin_no[10]" name="bin_no" value="10"><label for="bin_no[10]"><span class='bin'>10</span> Burghill West Bench</label></dt>
-            <dt><input type="radio" id="bin_no[11]" name="bin_no" value="11"><label for="bin_no[11]"><span class='bin'>11</span> Stannochy Pink Cottage</label></dt>
-<!--            
-            <dt><input type="radio" id="bin_no[12]" name="bin_no" value="12"><label for="bin_no[12]"><span class='bin'>12</span> Aberlemno Toll</label></dt>
--->
-            <dt><input type="radio" id="bin_no[13]" name="bin_no" value="13"><label for="bin_no[13]"><span class='bin'>13</span> Pittendreich</label></dt>
-            <dt><input type="radio" id="bin_no[14]" name="bin_no" value="14"><label for="bin_no[14]"><span class='bin'>14</span> Pittendreich Grosefield Halfway</label></dt>
-            <dt><input type="radio" id="bin_no[15]" name="bin_no" value="15"><label for="bin_no[15]"><span class='bin'>15</span> Grosefield</label></dt>
-          </dl>
-        </td><td valign="top">
-          <dl>
-            <dt><input type="radio" id="bin_no[16]" name="bin_no" value="16"><label for="bin_no[16]"><span class='bin'>16</span> Parkend</label></dt>
-            <dt><input type="radio" id="bin_no[17]" name="bin_no" value="17"><label for="bin_no[17]"><span class='bin'>17</span> Limefield</label></dt>
-            <dt><input type="radio" id="bin_no[37]" name="bin_no" value="37"><label for="bin_no[37]"><span class='bin'>37</span> BSM</label></dt>
-
-            <dt><input type="radio" id="bin_no[18]" name="bin_no" value="18"><label for="bin_no[18]"><span class='bin'>18</span> Trinity</label></dt>
-            <dt><input type="radio" id="bin_no[19]" name="bin_no" value="19"><label for="bin_no[19]"><span class='bin'>19</span> Tilygloom</label></dt>
-            <dt><input type="radio" id="bin_no[20]" name="bin_no" value="20"><label for="bin_no[20]"><span class='bin'>20</span> Pitforthie</label></dt>
-<!--
-            <dt><input type="radio" id="bin_no[21]" name="bin_no" value="21"><label for="bin_no[21]"><span class='bin'>21</span> Brechin Bridge</label></dt>
-            <dt><input type="radio" id="bin_no[22]" name="bin_no" value="22"><label for="bin_no[22]"><span class='bin'>22</span> Mid Wee Wood</label></dt>
-            <dt><input type="radio" id="bin_no[23]" name="bin_no" value="23"><label for="bin_no[23]"><span class='bin'>23</span> Rugby Pitch NE</label></dt>
-            <dt><input type="radio" id="bin_no[24]" name="bin_no" value="24"><label for="bin_no[24]"><span class='bin'>24</span> Rugby Pitch SE</label></dt>
--->            
-            <dt><input type="radio" id="bin_no[25]" name="bin_no" value="25"><label for="bin_no[25]"><span class='bin'>25</span> Mains of Pitforthie</label></dt>
-            <dt><input type="radio" id="bin_no[26]" name="bin_no" value="26"><label for="bin_no[26]"><span class='bin'>26</span> Eggbox</label></dt>
-<!--            
-            <dt><input type="radio" id="bin_no[27]" name="bin_no" value="27"><label for="bin_no[27]"><span class='bin'>27</span> Andover Railway</label></dt>
--->            
-            <dt><input type="radio" id="bin_no[28]" name="bin_no" value="28"><label for="bin_no[28]"><span class='bin'>28</span> BMX Track</label></dt>
-            <dt><input type="radio" id="bin_no[29]" name="bin_no" value="29"><label for="bin_no[29]"><span class='bin'>29</span> Park Rd Drumachlie Steps</label></dt>
-            <dt><input type="radio" id="bin_no[30]" name="bin_no" value="30"><label for="bin_no[30]"><span class='bin'>30</span> Drumachlie Railway Bridge</label></dt>
-<!--            
-            <dt><input type="radio" id="bin_no[31]" name="bin_no" value="31"><label for="bin_no[31]"><span class='bin'>31</span> Skinners Burn</label></dt>
-            <dt><input type="radio" id="bin_no[32]" name="bin_no" value="32"><label for="bin_no[32]"><span class='bin'>32</span> Brechin Bridge Half-way</label></dt>
--->
-            <dt><input type="radio" id="bin_no[33]" name="bin_no" value="33"><label for="bin_no[33]"><span class='bin'>33</span> Slaughterhouse</label></dt>
-<!--
-            <dt><input type="radio" id="bin_no[34]" name="bin_no" value="34"><label for="bin_no[34]"><span class='bin'>34</span> Rugby Pitch North</label></dt>
--->            
-            <dt><input type="radio" id="bin_no[35]" name="bin_no" value="35"><label for="bin_no[35]"><span class='bin'>35</span> Bearehill Arches</label></dt>
-            <dt><input type="radio" id="bin_no[36]" name="bin_no" value="36"><label for="bin_no[36]"><span class='bin'>36</span> Hollingworth Way</label></dt>
-          </dl>
-        </td>
-      </tr>
-      <tr>
-      <td colspan=2 align="center">
-        <input type="radio" id="contents[0]" name="contents" value="Empty"><label for="contents[0]">Empty</label>
-        <input type="radio" id="contents[1]" name="contents" value="Some"><label for="contents[1]">Some</label>
-        <input type="radio" id="contents[2]" name="contents" value="Full" checked="checked"><label for="contents[2]">Full</label>
-        <input type="radio" id="contents[3]" name="contents" value="Overflowing"><label for="contents[3]">Overflowing</label>
-      </td>
-      </tr>
-      <tr>
-      <td colspan=2 align="center"><input type=submit value="Emptied"></td>
-      </tr>
-    </table>
-  </div>
-</form>
-<?
-} else {
-  $sql = 
-    "SELECT b.bin_name, ".
-    "(SELECT COUNT(*) FROM empty WHERE bin_no=b.bin_no AND person_id='"  . $person_id . "' AND TIMESTAMPDIFF(MINUTE,emptied_date,NOW()) < 15) recent_empties ".
-    "FROM bin b WHERE b.active=1 AND b.bin_no=" . $bin_no;
-  $result = $conn->query($sql);
-  
-  if ($result->num_rows > 0) {
-    if ($row = $result->fetch_assoc()) {
-      $bin_name = $row["bin_name"];
-    }
-    
-    if(empty($_POST["contents"])) $contents = "Full";
-    
-    if ($row['recent_empties'] == 0) {
-      $sql = "INSERT INTO empty (bin_no, person_id, contents) VALUES ('" . $bin_no . "', '"  . $person_id . "', '"  . $contents . "');";
-      $conn->query($sql);
-      
-      $to_email = "brechinpathnetwork@googlegroups.com";
-      //$to_email = "craig@southesk.com";
-      $subject = $person_name . " has emptied Bin (" . $bin_no . ") - " . $bin_name . " - " . $contents;
-      $message = $subject . "\r\n\r\nNeed the map? https://southesk.com/bpn \r\n\r\nhttps://southesk.com/bpn_stats.php\r\n\r\n";
-      $headers = ""; //"From: craigamckay@gmail.com";
-      mail($to_email,$subject,$message,$headers);
-    }
-    
-    echo "<h1>Thank you, " . $person_name . ", for empting Bin <span class='bin'>$bin_no</span> <span class='binname'>" . $bin_name . "</span> &mdash; <span class='contents'>" . $contents . "</span></h1>";
-    
-    // https://dancer/bpn/bpn_empty.php?person=CM391F9F
-    
-    recent_empties($conn, $person_id);
-?>
-    <div><h2><a href="bpn_stats.php">View the full stats</a></h2></div>
-<?   
-    table_bins_empty_probably($conn);
+if (!empty($person)) {
+  $person_key = substr($person, 0, 8);
+  $stmt = $conn->prepare("SELECT person_id, person_name FROM person WHERE person_key=?");
+  $stmt->bind_param("s", $person_key);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  if ($row = $result->fetch_assoc()) {
+    $person_id   = $row["person_id"];
+    $person_name = $row["person_name"];
   }
+  $stmt->close();
 }
 
-$conn->close();
+/* ------------------------------------------------------------------------ */
+
+if (empty($person_id)) {
+
+  bpn_head('Waste Bins - Brechin Path Network');
+  ?>
+  <div class="banner banner--error">
+    <h1>We don't recognise that code</h1>
+    <p class="lede">This link identifies you as one of the volunteers, and it
+    doesn't match anyone on our list.</p>
+    <p>If your card has stopped working, email
+    <a href="mailto:<?=bpn_h(BPN_NOTIFY_EMAIL)?>"><?=bpn_h(BPN_NOTIFY_EMAIL)?></a>
+    and we'll sort you out a new one.</p>
+  </div>
+  <?php
+  bpn_foot();
+  exit;
+}
+
+/* --- pick a bin ---------------------------------------------------------- */
+
+if (empty($bin_no)) {
+
+  $bins = array();
+  $res = $conn->query("SELECT bin_no, bin_name FROM bin WHERE active=1 ORDER BY bin_no");
+  while ($row = $res->fetch_assoc()) {
+    $bins[] = $row;
+  }
+
+  // First name only - "Hello Craig!" reads better than the full name.
+  $first_name = strtok(trim($person_name), ' ');
+
+  bpn_head('Which bin? - ' . $first_name, true);
+  ?>
+  <h1>Hello <?=bpn_h($first_name)?>!</h1>
+  <p class="lede">Which bin have you emptied?</p>
+
+  <form method="post">
+    <fieldset class="choices-group">
+      <legend class="visually-hidden">Bin</legend>
+      <!-- The grid lives on this div, not the fieldset. Older mobile browsers
+           ignore display:grid on a fieldset and fall back to one column. -->
+      <div class="choices choices--bins">
+        <?php foreach ($bins as $b) { ?>
+          <label class="choice">
+            <input type="radio" name="bin_no" value="<?=bpn_h($b['bin_no'])?>">
+            <span><span class="bin-no"><?=bpn_h($b['bin_no'])?></span>
+            <?=bpn_h($b['bin_name'])?></span>
+          </label>
+        <?php } ?>
+      </div>
+    </fieldset>
+
+    <?php
+      bpn_status_radios('contents_id',  bpn_status_list($conn, BPN_CONTENTS),
+                        BPN_DEFAULT_CONTENTS,  'How full was it?');
+      bpn_status_radios('condition_id', bpn_status_list($conn, BPN_CONDITION),
+                        BPN_DEFAULT_CONDITION, 'What condition is the bin in?');
+    ?>
+
+    <div class="field">
+      <label for="comments">Comments <span class="muted">(optional)</span></label>
+      <textarea id="comments" name="comments" maxlength="1000"
+                placeholder="Anything worth passing on?"></textarea>
+    </div>
+
+    <button type="submit" class="btn">Emptied</button>
+  </form>
+  <?php
+  bpn_foot();
+  $conn->close();
+  exit;
+}
+
+/* --- record the empty ---------------------------------------------------- */
+
+$stmt = $conn->prepare(
+  "SELECT b.bin_name, " .
+  "(SELECT COUNT(*) FROM empty WHERE bin_no=b.bin_no AND person_id=? " .
+  " AND TIMESTAMPDIFF(MINUTE,emptied_date,NOW()) < 15) recent_empties " .
+  "FROM bin b WHERE b.active=1 AND b.bin_no=?");
+$stmt->bind_param("ii", $person_id, $bin_no);
+$stmt->execute();
+$row = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+if (!$row) {
+  bpn_head('Waste Bins - Brechin Path Network');
+  ?>
+  <div class="banner banner--error">
+    <h1>That bin isn't on the list</h1>
+    <p>It may have been retired. Please let
+    <a href="mailto:<?=bpn_h(BPN_NOTIFY_EMAIL)?>"><?=bpn_h(BPN_NOTIFY_EMAIL)?></a>
+    know.</p>
+  </div>
+  <?php
+  bpn_foot();
+  $conn->close();
+  exit;
+}
+
+$bin_name  = $row['bin_name'];
+$contents  = bpn_status_name($conn, $contents_id);
+$condition = bpn_status_name($conn, $condition_id);
+
+if ($row['recent_empties'] == 0) {
+  $insert = $conn->prepare(
+    "INSERT INTO empty (bin_no, person_id, contents, contents_id, condition_id, comments) " .
+    "VALUES (?, ?, ?, ?, ?, ?)");
+  // `contents` is still written while the old column exists - migration 002
+  // drops it once this code is confirmed live.
+  $insert->bind_param("iisiis", $bin_no, $person_id, $contents, $contents_id, $condition_id, $comments);
+  $insert->execute();
+  $insert->close();
+
+  $subject = $person_name . " has emptied Bin (" . $bin_no . ") - " . $bin_name . " - " . $contents;
+  if ($condition_id != BPN_DEFAULT_CONDITION) {
+    $subject .= " [" . $condition . "]";
+  }
+
+  $text  = $subject . "\r\n\r\n";
+  if ($condition_id != BPN_DEFAULT_CONDITION) {
+    $text .= "Condition: " . $condition . "\r\n\r\n";
+  }
+  if ($comments !== '') {
+    $text .= "Comments:\r\n" . $comments . "\r\n\r\n";
+  }
+  $text .= "Map:   https://southesk.com/bpn\r\n";
+  $text .= "Stats: https://southesk.com/bpnbins/\r\n";
+
+  $html  = '<div style="font-family:Arial,sans-serif;color:#1b1b1b">';
+  $html .= '<p style="font-size:20px;margin:0 0 16px"><strong>' . bpn_h($person_name)
+         . '</strong> has emptied Bin <strong>' . bpn_h($bin_no) . '</strong> &mdash; '
+         . bpn_h($bin_name) . ' (' . bpn_h($contents) . ')</p>';
+  if ($condition_id != BPN_DEFAULT_CONDITION) {
+    $html .= '<p style="font-size:22px;font-weight:bold;color:#E31E24;margin:0 0 16px">'
+           . bpn_h($condition) . '</p>';
+  }
+  if ($comments !== '') {
+    $html .= '<p style="font-size:16px;margin:0 0 4px;color:#555">Comments</p>';
+    $html .= '<p style="font-size:18px;line-height:1.4;border-left:4px solid #006633;'
+           . 'padding-left:12px;margin:0 0 16px">' . nl2br(bpn_h($comments)) . '</p>';
+  }
+  $html .= '<p style="font-size:14px"><a href="https://southesk.com/bpn">Map</a>'
+         . ' &nbsp;|&nbsp; <a href="https://southesk.com/bpnbins/">Stats</a></p>';
+  $html .= '</div>';
+
+  bpn_mail(BPN_NOTIFY_EMAIL, $subject, $text, $html);
+}
+
+bpn_head('Bin ' . $bin_no . ' emptied - thank you', true);
 ?>
-</body> 
-</html>
+
+<h1>Thank you, <?=bpn_h($person_name)?></h1>
+
+<div class="banner banner--ok">
+  <p class="lede" style="margin:0">
+    <span class="bin-no"><?=bpn_h($bin_no)?></span>
+    <span class="bin-name"><?=bpn_h($bin_name)?></span>
+    &mdash; <span class="contents"><?=bpn_h($contents)?></span>
+    <?php if ($condition_id != BPN_DEFAULT_CONDITION) { ?>
+      &mdash; <span class="contents"><?=bpn_h($condition)?></span>
+    <?php } ?>
+  </p>
+</div>
+
+<?php
+if ($comments !== '') {
+  echo '<div class="panel note"><p style="margin:0"><strong>Your comments:</strong> '
+     . nl2br(bpn_h($comments)) . '</p></div>';
+}
+
+if ($row['recent_empties'] > 0) {
+  echo '<p class="muted">You logged this one in the last few minutes, so we '
+     . 'haven\'t recorded it twice.</p>';
+}
+
+recent_empties($conn, $person_id);
+?>
+
+<p><a class="btn btn--small" href="<?=bpn_url('bpnbins/')?>">View the full stats</a></p>
+
+<?php
+table_bins_empty_probably($conn);
+bpn_foot();
+$conn->close();

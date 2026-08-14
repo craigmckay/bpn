@@ -1,0 +1,26 @@
+# Scoped to this directory only. Joomla's own .htaccess at the web root is not
+# touched and continues to control everything outside /bpnbins/.
+
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /bpnbins/
+
+  # /bpnbins/status -> bpn_status.php
+  # An explicit rule, not a catch-all, so no other URL is affected. The .php
+  # pages at the web root (bpn_empty.php, bpn_waste_report.php) are outside
+  # this directory and are unaffected either way.
+  RewriteRule ^status/?$ bpn_status.php [L]
+</IfModule>
+
+# Config and data are read by PHP, never served over HTTP.
+<FilesMatch "^(config|config\.sample)\.php$">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_authz_core.c>
+  <Files "*.sql">
+    Require all denied
+  </Files>
+</IfModule>

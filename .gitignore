@@ -1,10 +1,14 @@
 # Local database credentials - never commit
-config.php
+bpnbins/config.php
 
 # Real database dumps (contain names, emails and person_key access tokens)
-data/*.sql
-!data/schema.sql
-!data/seed.sample.sql
+db/*.sql
+!db/schema.sql
+!db/seed.sample.sql
+
+# FTP credentials and deploy output - never commit
+deploy/deploy.ini
+deploy/deploy.log
 
 # Editor / OS noise
 .vscode/
