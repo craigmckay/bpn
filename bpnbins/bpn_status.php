@@ -1,38 +1,23 @@
 <?php
-include_once __DIR__ . '/bpn_db.php';
+/**
+ * Which bins probably need emptying, and which have gone quiet.
+ * Served at /bpnbins/status via the rewrite in .htaccess.
+ */
+
 include_once __DIR__ . '/bpn_util.php';
-?>
-<html>
-<head>
-<?php bpn_analytics_tag(); ?>
-<title>Waste Bin Status</title>
-<style>
-h1, h2, p, label, dt, td, th {
-  font-family: "Arial";
-}
-h1, label, dt {
-  font-size: 3.5vw;
-}
-h2 {
-  font-size: 3.0vw;
-}
-td, th {
-  font-size: 2.5vw;
-}
-input[type=radio] {
-  border: 0px;
-  width: 4em;
-  height: 4em;
-}
-</style>
-</head>
 
-<body>
+bpn_head('Waste Bin Status', true);
+?>
+
+<h1>Bin status</h1>
+
 <?php
-  table_bins_empty_probably($conn);
-  table_bins_empty_old($conn);
-
-  $conn->close();
+table_bins_empty_probably($conn);
+table_bins_empty_old($conn);
 ?>
-</body>
-</html>
+
+<p><a class="btn btn--small" href="<?=bpn_url('bpnbins/')?>">View the full stats</a></p>
+
+<?php
+bpn_foot();
+$conn->close();

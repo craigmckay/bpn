@@ -1,5 +1,5 @@
 <?php 
-include_once __DIR__ . '/bpn_db.php';
+include_once __DIR__ . '/bpn_util.php';
 
 // $period and $bin_no are interpolated into conditionally-built query
 // fragments below, so they cannot be bound as parameters. They are forced
@@ -7,113 +7,9 @@ include_once __DIR__ . '/bpn_db.php';
 $person = NULL; if(!empty($_GET["person"])) $person = bpn_initials($_GET["person"]);
 $period = 0; if(!empty($_GET["period"])) $period = bpn_int($_GET["period"], 0);
 $bin_no = NULL; if(!empty($_GET["bin_no"])) $bin_no = bpn_int($_GET["bin_no"], 0);
+
+bpn_head('Waste Bin Stats', true);
 ?>
-<html>
-<head>
-<?php bpn_analytics_tag(); ?>
-<title>Waste Bin Stats</title>
-<style>
-
-html {
-  height: 100vh;
-}
-
-body {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  flex-grow: 1;
-}
-
-h1, h2, p, label, dt, td, th {
-  font-family: "Arial";
-}
-h1, label, dt {
-  font-size: 4vw;
-}
-h2 {
-  font-size: 3.5vw;
-}
-td, th {
-  font-size: 3.5vw;
-}
-input[type=radio] {
-  border: 0px;
-  width: 4em;
-  height: 4em;
-}
-
-span.bin {
-  background-color: #FCC135;
-  color: black;
-  padding-left: 0.5vw;
-  padding-right: 0.5vw;
-  border: 5px solid #E31E24;
-  font-size: 4vw;
-}
-
-span.binname {
-  background-color: #006633;
-  color: white;
-  padding: 0.5vw;
-  font-size: 4vw;
-}
-
-span.contents {
-  color: #E31E24;
-}
-
-input[type=submit] {
-  background-color: #006633;
-  border: none;
-  color: white;
-  padding: 20px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 6vw;
-  margin: 4px 2px;
-  border-radius: 12px;
-}
-
-dt {
-   text-indent: -12vw;
-   padding-left: 12vw;
-   padding-bottom: 1vw;
-}
-
-#div {
-  height: 44vh;
-  margin: auto;
-}
-
-#chrtBin, #chrtBin {
-  width: 80vw;  
-}
-
-#buttons {
-  margin: auto;
-  padding-top: 1vh;
-}
-
-.button {
-  background-color: #046DFF;
-  border: none;
-  color: white;
-  padding: 10px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 12px;
-  margin: 5px 10px 10px 10px;
-  border-radius: 20px;
-}
-.button:hover {
-  background-color: #046DAA;
-}
-
-
-</style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   function refreshPeriod(period) {
@@ -127,20 +23,16 @@ dt {
     top.location.href=urlPieces.join('');
   }
 </script>
-</head>
-
-<body>
-
-<div id="div">
+<div class="chart">
   <canvas id="chrtBin"></canvas>
 </div>
 
-<div id="buttons">
-<input type=button class="button" id="stats_all" name="stats_all" value="All Stats" onClick="refreshAll();">
-<input type=button class="button" id="period_all" name="period_all" value="All time" onClick="refreshPeriod(0);">
-<input type=button class="button" id="period_1y" name="period_1y" value="1 year" onClick="refreshPeriod(12);">
-<input type=button class="button" id="period_6m" name="period_6m" value="6 months" onClick="refreshPeriod(6);">
-<input type=button class="button" id="period_3m" name="period_3m" value="3 months" onClick="refreshPeriod(3);">
+<div class="buttons">
+<input type=button class="btn btn--small" id="stats_all" name="stats_all" value="All Stats" onClick="refreshAll();">
+<input type=button class="btn btn--small" id="period_all" name="period_all" value="All time" onClick="refreshPeriod(0);">
+<input type=button class="btn btn--small" id="period_1y" name="period_1y" value="1 year" onClick="refreshPeriod(12);">
+<input type=button class="btn btn--small" id="period_6m" name="period_6m" value="6 months" onClick="refreshPeriod(6);">
+<input type=button class="btn btn--small" id="period_3m" name="period_3m" value="3 months" onClick="refreshPeriod(3);">
 </div>
 
 <div id=debug></div>
@@ -162,20 +54,21 @@ $sql =
   "SELECT t.contents, t.emptied_month, SUM(t.empty_count) empty_count ".
     "FROM ( ".
       "SELECT ".
-        "IFNULL(e.contents, 'Full') contents, ".
+        "sc.name contents, ".
         "DATE_FORMAT(e.emptied_date, '%Y-%m') emptied_month, ".
         "COUNT(*) empty_count ".
       "FROM bin b ".
       "INNER JOIN empty e ON e.bin_no=b.bin_no ".
+      "INNER JOIN status sc ON sc.status_id=e.contents_id ".
       "WHERE b.bin_no='" . $bin_no . "' " .
       (($period==0) ? "" : "AND e.emptied_date >= (NOW() - INTERVAL " . $period . " MONTH) ") .
-      "GROUP BY e.contents, DATE_FORMAT(e.emptied_date, '%Y-%m') ".
+      "GROUP BY sc.name, DATE_FORMAT(e.emptied_date, '%Y-%m') ".
       "UNION ".
-      "SELECT c.contents, DATE_FORMAT(e.emptied_date, '%Y-%m') emptied_month, 0 empty_count ".
-      "FROM contents c, empty e ".
-      "WHERE e.bin_no='" . $bin_no . "' " .
+      "SELECT c.name contents, DATE_FORMAT(e.emptied_date, '%Y-%m') emptied_month, 0 empty_count ".
+      "FROM status c, empty e ".
+      "WHERE c.type_id=1 AND e.bin_no='" . $bin_no . "' " .
       (($period==0) ? "" : "AND e.emptied_date >= (NOW() - INTERVAL " . $period . " MONTH) ") .
-      "GROUP BY c.contents, DATE_FORMAT(e.emptied_date, '%Y-%m') ".
+      "GROUP BY c.name, DATE_FORMAT(e.emptied_date, '%Y-%m') ".
       ") t ".
     "GROUP BY t.contents, t.emptied_month " .
     "ORDER BY t.contents, t.emptied_month";
@@ -205,6 +98,7 @@ $sql =
    (($period==0) ? "" : " AND e2.emptied_date >= (NOW() - INTERVAL " . $period . " MONTH)"). ") total_count ".
   "FROM bin b " .
   "INNER JOIN empty e ON e.bin_no=b.bin_no ".
+      "INNER JOIN status sc ON sc.status_id=e.contents_id ".
   "WHERE b.bin_no='" . $bin_no . "' " .
   (($period==0) ? "" : "AND e.emptied_date >= (NOW() - INTERVAL " . $period . " MONTH) ") .
   "GROUP BY DATE_FORMAT(e.emptied_date, '%Y-%m') ".
@@ -302,5 +196,4 @@ ctx.onclick = function(evt) {
 <?php
 $conn->close();
 ?>
-</body> 
-</html>
+<?php bpn_foot(); ?>

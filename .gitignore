@@ -6,6 +6,10 @@ db/*.sql
 !db/schema.sql
 !db/seed.sample.sql
 
+# FTP credentials and deploy output - never commit
+deploy/deploy.ini
+deploy/deploy.log
+
 # Editor / OS noise
 .vscode/
 .idea/
