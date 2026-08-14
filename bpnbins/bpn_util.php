@@ -1,5 +1,5 @@
 <?php 
-include_once 'bpn_db.php';
+include_once __DIR__ . '/bpn_db.php';
 
 function table_bins_empty_probably($conn) {  
   $sql =

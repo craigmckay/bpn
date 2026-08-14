@@ -1,6 +1,6 @@
 <?php 
-include_once 'bpn_db.php';
-include_once 'bpn_util.php';
+include_once __DIR__ . '/bpnbins/bpn_db.php';
+include_once __DIR__ . '/bpnbins/bpn_util.php';
 
 $person = NULL; if(!empty($_GET["person"])) $person = TRIM($_GET["person"]);
 $bin_no = NULL; if(!empty($_POST["bin_no"])) $bin_no = bpn_int($_POST["bin_no"], 0);
@@ -25,15 +25,7 @@ if (!empty($person)) {
 ?>
 <html>
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-MPXXSQYB9E"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-MPXXSQYB9E');
-</script>
+<?php bpn_analytics_tag(); ?>
 <title>Waste Bin Emptied<?php if (!empty($person_name)) { echo " by " . bpn_h($person_name); }?></title>
 <style>
 h1, h2, p, label, dt, td, th {
@@ -202,10 +194,9 @@ if (empty($person_id)) {
       $insert->execute();
       $insert->close();
 
-      $to_email = "brechinpathnetwork@googlegroups.com";
-      //$to_email = "craig@southesk.com";
+      $to_email = BPN_NOTIFY_EMAIL;
       $subject = $person_name . " has emptied Bin (" . $bin_no . ") - " . $bin_name . " - " . $contents;
-      $message = $subject . "\r\n\r\nNeed the map? https://southesk.com/bpn \r\n\r\nhttps://southesk.com/bpn_stats.php\r\n\r\n";
+      $message = $subject . "\r\n\r\nNeed the map? https://southesk.com/bpn \r\n\r\nhttps://southesk.com/bpnbins/\r\n\r\n";
       $headers = ""; //"From: craigamckay@gmail.com";
       mail($to_email,$subject,$message,$headers);
     }
@@ -216,7 +207,7 @@ if (empty($person_id)) {
     
     recent_empties($conn, $person_id);
 ?>
-    <div><h2><a href="bpn_stats.php">View the full stats</a></h2></div>
+    <div><h2><a href="/bpnbins/">View the full stats</a></h2></div>
 <?php   
     table_bins_empty_probably($conn);
   }

@@ -1,0 +1,11 @@
+# This folder is deployed into the Joomla document root, so without this it
+# would be reachable at https://southesk.com/db/. Nothing here is ever served
+# over HTTP - the .sql files are for setting up a database by hand.
+
+Require all denied
+
+# Fallback for Apache 2.2, which does not understand Require.
+<IfModule !mod_authz_core.c>
+  Order allow,deny
+  Deny from all
+</IfModule>

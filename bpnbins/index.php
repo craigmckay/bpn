@@ -1,5 +1,5 @@
 <?php 
-include_once 'bpn_db.php';
+include_once __DIR__ . '/bpn_db.php';
 
 // $person and $period are interpolated into conditionally-built query
 // fragments below, so they cannot be bound as parameters. They are forced
@@ -11,15 +11,7 @@ $bin_no = NULL; if(!empty($_GET["bin_no"])) $bin_no = bpn_int($_GET["bin_no"], 0
 ?>
 <html>
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-MPXXSQYB9E"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-MPXXSQYB9E');
-</script>
+<?php bpn_analytics_tag(); ?>
 <title>Waste Bin Stats</title>
 <style>
 

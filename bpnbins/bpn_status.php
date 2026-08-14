@@ -1,18 +1,10 @@
 <?php
-include_once 'bpn_db.php';
-include_once 'bpn_util.php';
+include_once __DIR__ . '/bpn_db.php';
+include_once __DIR__ . '/bpn_util.php';
 ?>
 <html>
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-MPXXSQYB9E"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-MPXXSQYB9E');  
-</script>
+<?php bpn_analytics_tag(); ?>
 <title>Waste Bin Status</title>
 <style>
 h1, h2, p, label, dt, td, th {

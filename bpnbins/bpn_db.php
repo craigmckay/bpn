@@ -1,9 +1,9 @@
 <?php
 /**
- * Database connection.
+ * Shared bootstrap: configuration, database connection and helpers.
  *
- * Credentials live in config.php, which is gitignored.
- * See config.sample.php for the expected shape.
+ * Every page includes this file first. Settings live in config.php, which is
+ * gitignored. See config.sample.php for the expected shape.
  */
 
 $configFile = __DIR__ . '/config.php';
@@ -13,6 +13,22 @@ if (!file_exists($configFile)) {
 }
 
 $config = require $configFile;
+
+/**
+ * Address that bin reports and empty notifications are sent to.
+ * Required - there is no sensible default, and silently mailing nobody would
+ * be worse than failing here.
+ */
+if (empty($config['notify_email'])) {
+    die("Missing 'notify_email' in config.php - see config.sample.php.");
+}
+define('BPN_NOTIFY_EMAIL', $config['notify_email']);
+
+/**
+ * Google Analytics measurement ID. Optional: leave it empty (or omit it) and
+ * no analytics markup is emitted at all, which is what you want locally.
+ */
+define('BPN_ANALYTICS_ID', $config['analytics_id'] ?? '');
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
@@ -59,4 +75,26 @@ function bpn_initials($value) {
 /** Escape for output in HTML. */
 function bpn_h($value) {
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * Emit the Google Analytics tag, or nothing if no measurement ID is set.
+ * Call this inside <head>.
+ */
+function bpn_analytics_tag() {
+    if (BPN_ANALYTICS_ID === '') {
+        return;
+    }
+    $id = bpn_h(BPN_ANALYTICS_ID);
+    echo <<<HTML
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id={$id}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', '{$id}');
+</script>
+HTML;
 }
