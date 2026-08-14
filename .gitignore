@@ -1,0 +1,14 @@
+# Local database credentials - never commit
+config.php
+
+# Real database dumps (contain names, emails and person_key access tokens)
+data/*.sql
+!data/schema.sql
+!data/seed.sample.sql
+
+# Editor / OS noise
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

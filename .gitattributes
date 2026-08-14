@@ -1,0 +1,4 @@
+# Normalise line endings so XAMPP on Windows stops rewriting every file.
+* text=auto eol=lf
+
+*.png binary

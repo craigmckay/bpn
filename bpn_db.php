@@ -1,13 +1,32 @@
-<?php 
-$servername = "localhost";
-$username = "southesk_bpn";
-$password = "__REMOVED_SEE_config.php__";
+<?php
+/**
+ * Database connection.
+ *
+ * Credentials live in config.php, which is gitignored.
+ * See config.sample.php for the expected shape.
+ */
 
-// Create connection
-$conn = new mysqli($servername, $username, $password, $username);
+$configFile = __DIR__ . '/config.php';
 
-// Check connection
-if ($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
+if (!file_exists($configFile)) {
+    die('Missing config.php - copy config.sample.php to config.php and set your database credentials.');
 }
-?>
+
+$config = require $configFile;
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+try {
+    $conn = new mysqli(
+        $config['host'],
+        $config['username'],
+        $config['password'],
+        $config['database']
+    );
+    $conn->set_charset($config['charset'] ?? 'utf8mb4');
+} catch (mysqli_sql_exception $e) {
+    // Log the detail, show the user nothing useful to an attacker.
+    error_log('BPN database connection failed: ' . $e->getMessage());
+    http_response_code(503);
+    die('Database unavailable. Please try again later.');
+}
