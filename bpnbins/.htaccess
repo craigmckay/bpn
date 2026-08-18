@@ -7,11 +7,25 @@ DirectoryIndex index.php
   RewriteEngine On
   RewriteBase /bpnbins/
 
-  # /bpnbins/status -> bpn_status.php
-  # An explicit rule, not a catch-all, so no other URL is affected. The .php
-  # pages at the web root (bpn_empty.php, bpn_waste_report.php) are outside
-  # this directory and are unaffected either way.
-  RewriteRule ^status/?$ bpn_status.php [L]
+  # --- canonical URLs ------------------------------------------------------
+  # Old .php addresses redirect to the tidy ones. Matching on THE_REQUEST means
+  # this only fires for a real browser request, never for the internal rewrites
+  # below - otherwise the two rules would bounce off each other forever.
+  # Query strings carry over automatically.
+
+  RewriteCond %{THE_REQUEST} \s/+bpnbins/bpn_status\.php[\s?] [NC]
+  RewriteRule ^ /bpnbins/status [R=301,L]
+
+  RewriteCond %{THE_REQUEST} \s/+bpnbins/bpn_stats_bin\.php[\s?] [NC]
+  RewriteRule ^ /bpnbins/stats/bin [R=301,L]
+
+  # --- pretty URLs ---------------------------------------------------------
+  # Explicit rules, not a catch-all, so nothing else is affected. The pages at
+  # the web root (bpn_empty.php, bpn_waste_report.php) are outside this
+  # directory and untouched either way.
+
+  RewriteRule ^status/?$        bpn_status.php    [L]
+  RewriteRule ^stats/bin/?$     bpn_stats_bin.php [L]
 </IfModule>
 
 # Config and data are read by PHP, never served over HTTP.

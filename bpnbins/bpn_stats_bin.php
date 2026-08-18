@@ -12,15 +12,16 @@ bpn_head('Waste Bin Stats', true);
 ?>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+  // Absolute paths written by PHP. Deriving them from location.pathname broke
+  // as soon as the pretty URLs added a path segment (/bpnbins/stats/bin).
+  const STATS_URL = "<?=bpn_url('bpnbins/')?>";
+  const BIN_URL   = "<?=bpn_url('bpnbins/stats/bin')?>";
+
   function refreshPeriod(period) {
-    const urlPieces = [location.protocol, '//', location.host, location.pathname]
-    let url = urlPieces.join('')
-    top.location.href=url + "?bin_no=" + <?=$bin_no?> + "&period=" + period;
+    top.location.href = BIN_URL + "?bin_no=" + <?=bpn_int($bin_no, 0)?> + "&period=" + period;
   }
   function refreshAll() {
-    const path = location.pathname.substring(0, location.pathname.lastIndexOf('/')) + "/";
-    const urlPieces = [location.protocol, '//', location.host, path, 'index.php']
-    top.location.href=urlPieces.join('');
+    top.location.href = STATS_URL;
   }
 </script>
 <div class="chart">

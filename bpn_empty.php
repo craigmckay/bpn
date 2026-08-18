@@ -140,11 +140,9 @@ $condition = bpn_status_name($conn, $condition_id);
 
 if ($row['recent_empties'] == 0) {
   $insert = $conn->prepare(
-    "INSERT INTO empty (bin_no, person_id, contents, contents_id, condition_id, comments) " .
-    "VALUES (?, ?, ?, ?, ?, ?)");
-  // `contents` is still written while the old column exists - migration 002
-  // drops it once this code is confirmed live.
-  $insert->bind_param("iisiis", $bin_no, $person_id, $contents, $contents_id, $condition_id, $comments);
+    "INSERT INTO empty (bin_no, person_id, contents_id, condition_id, comments) " .
+    "VALUES (?, ?, ?, ?, ?)");
+  $insert->bind_param("iiiis", $bin_no, $person_id, $contents_id, $condition_id, $comments);
   $insert->execute();
   $insert->close();
 
