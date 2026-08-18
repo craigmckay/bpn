@@ -13,21 +13,19 @@ bpn_head('Waste Bin Stats', true);
 ?>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+  // Absolute paths written by PHP. Deriving them from location.pathname broke
+  // as soon as the pretty URLs added a path segment (/bpnbins/stats/bin).
+  const STATS_URL = "<?=bpn_url('bpnbins/')?>";
+  const BIN_URL   = "<?=bpn_url('bpnbins/stats/bin')?>";
+
   function refreshPeriod(period) {
-    const urlPieces = [location.protocol, '//', location.host, location.pathname]
-    let url = urlPieces.join('')
-    top.location.href=url + "?period=" + period;
+    top.location.href = STATS_URL + "?period=" + period;
   }
   function refreshPerson(person) {
-    const urlPieces = [location.protocol, '//', location.host, location.pathname]
-    let url = urlPieces.join('')
-    top.location.href=url + "?person=" + person <?php echo (($period==0) ? "" : "+ \"&period=".$period . "\"")?>;
+    top.location.href = STATS_URL + "?person=" + person <?php echo (($period==0) ? "" : "+ \"&period=".$period . "\"")?>;
   }
   function refreshBin(bin_no) {
-    const path = location.pathname.substring(0, location.pathname.lastIndexOf('/')) + "/";
-    const urlPieces = [location.protocol, '//', location.host, path, 'bpn_stats_bin.php']
-    let url = urlPieces.join('')
-    top.location.href=url + "?bin_no=" + bin_no <?php echo (($period==0) ? "" : "+ \"&period=".$period . "\"")?>;
+    top.location.href = BIN_URL + "?bin_no=" + bin_no <?php echo (($period==0) ? "" : "+ \"&period=".$period . "\"")?>;
   }
 </script>
 <div class="chart">
